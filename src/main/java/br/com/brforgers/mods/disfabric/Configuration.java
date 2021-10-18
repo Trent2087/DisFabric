@@ -7,6 +7,10 @@ import me.sargunvohra.mcmods.autoconfig1u.shadowed.blue.endless.jankson.Comment;
 
 @Config(name = DisFabric.MOD_ID)
 public class Configuration implements ConfigData {
+    @Comment(value = "Do you only what to use disfabric for commands?")
+    @ConfigEntry.Category(value = "CommandsOnly")
+    public boolean commandsOnly = false;
+
     @Comment(value = "Sets if DisFabric Should Modify In-Game Chat Messages")
     @ConfigEntry.Category(value = "MinecraftChat")
     public boolean modifyChatMessages = true;

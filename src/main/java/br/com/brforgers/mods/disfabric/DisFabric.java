@@ -64,11 +64,19 @@ public class DisFabric implements DedicatedServerModInitializer {
         if(jda != null) {
             if(!config.botGameStatus.isEmpty())
                 jda.getPresence().setActivity(Activity.playing(config.botGameStatus));
-            ServerLifecycleEvents.SERVER_STARTED.register((server) -> textChannel.sendMessage(DisFabric.config.texts.serverStarted).queue());
+
+            ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
+                if(!config.commandsOnly) {
+                    textChannel.sendMessage(DisFabric.config.texts.serverStarted).queue();
+                }
+            });
+
             ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
                 stop = true;
                 //logger.error(stop);
-                textChannel.sendMessage(DisFabric.config.texts.serverStopped).queue();
+                if(!config.commandsOnly) {
+                    textChannel.sendMessage(DisFabric.config.texts.serverStopped).queue();
+                }
                 try {
                     Thread.sleep(250);
                 } catch (InterruptedException e) {

@@ -31,6 +31,10 @@ public class DiscordEventListener extends ListenerAdapter {
                 String command = e.getMessage().getContentRaw().replace("!console ", "");
                 server.getCommandManager().execute(getDiscordCommandSource(), command);
 
+            } else if(e.getMessage().getContentRaw().startsWith("!whitelist")) {
+                String command = e.getMessage().getContentRaw().replace("!whitelist ", "whitelist add ");
+                server.getCommandManager().execute(getDiscordCommandSource(), command);
+
             } else if(e.getMessage().getContentRaw().startsWith("!online")) {
                 List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
                 StringBuilder playerList = new StringBuilder("```\n=============== Online Players (" + onlinePlayers.size() + ") ===============\n");
