@@ -92,6 +92,7 @@ public class DisFabric implements DedicatedServerModInitializer {
             });
             //ServerLifecycleEvents.SERVER_STOPPED.register((server) -> DisFabric.jda.shutdownNow());
             new MinecraftEventListener().init();
+
         }
         CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
             if (dedicated) {
