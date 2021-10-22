@@ -19,6 +19,9 @@ import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -34,13 +37,28 @@ public class DiscordEventListener extends ListenerAdapter {
 
             } else if(e.getMessage().getContentRaw().startsWith("!whitelist")) {
                 String command = e.getMessage().getContentRaw().replace("!whitelist ", "whitelist add ");
+                String minecraftUsername = e.getMessage().getContentRaw().replace("!whitelist ", "");
+
+                String discordID = "<@" + e.getAuthor().getId() + ">";
+                StringBuilder whitelisting = new StringBuilder("```\n!whitelist " + minecraftUsername + " " + discordID + "\n```");
+
+                try {
+                    URL url = new URL("https://api.mojang.com/users/profiles/minecraft/" + minecraftUsername);
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                        e.getChannel().sendMessage(whitelisting.toString()).queue();
+                    }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+
                 server.getCommandManager().execute(getDiscordCommandSource(e), command);
 
             } else if (e.getMessage().getContentRaw().startsWith("!spawn")) {
                 ServerWorld serverWorld = Objects.requireNonNull(getServer()).getOverworld();
-                StringBuilder spawn = new StringBuilder("Spawn location: ");
-                spawn.append(Vec3d.of(serverWorld.getSpawnPos()));
-                e.getChannel().sendMessage(spawn.toString()).queue();
+                String spawn = "Spawn location: " + Vec3d.of(serverWorld.getSpawnPos());
+                e.getChannel().sendMessage(spawn).queue();
 
             } else if(e.getMessage().getContentRaw().startsWith("!online")) {
                 List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
@@ -68,6 +86,12 @@ public class DiscordEventListener extends ListenerAdapter {
                         ```""";
                 e.getChannel().sendMessage(help).queue();
 
+            } else if(!DisFabric.config.commandsOnly){
+                LiteralText discord = new LiteralText(DisFabric.config.texts.coloredText.replace("%discordname%", Objects.requireNonNull(e.getMember()).getEffectiveName()).replace("%message%",e.getMessage().getContentDisplay().replace("§", DisFabric.config.texts.removeVanillaFormattingFromDiscord ? "&" : "§").replace("\n", DisFabric.config.texts.removeLineBreakFromDiscord ? " " : "\n") + ((e.getMessage().getAttachments().size() > 0) ? " <att>" : "") + ((e.getMessage().getEmbeds().size() > 0) ? " <embed>" : "")));
+                discord.setStyle(discord.getStyle().withColor(TextColor.fromRgb(Objects.requireNonNull(e.getMember()).getColorRaw())));
+                LiteralText msg = new LiteralText(DisFabric.config.texts.colorlessText.replace("%discordname%", Objects.requireNonNull(e.getMember()).getEffectiveName()).replace("%message%", MarkdownParser.parseMarkdown(e.getMessage().getContentDisplay().replace("§", DisFabric.config.texts.removeVanillaFormattingFromDiscord ? "&" : "§").replace("\n", DisFabric.config.texts.removeLineBreakFromDiscord ? " " : "\n") + ((e.getMessage().getAttachments().size() > 0) ? " <att>" : "") + ((e.getMessage().getEmbeds().size() > 0) ? " <embed>" : ""))));
+                msg.setStyle(msg.getStyle().withColor(TextColor.fromFormatting(Formatting.WHITE)));
+                server.getPlayerManager().getPlayerList().forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(new LiteralText("").append(discord).append(msg),false));
             }
         }
 
@@ -75,8 +99,10 @@ public class DiscordEventListener extends ListenerAdapter {
 
     public ServerCommandSource getDiscordCommandSource(@NotNull MessageReceivedEvent e){
         ServerWorld serverWorld = Objects.requireNonNull(getServer()).getOverworld();
+
         User author = e.getAuthor();
         String username = author.getName() + '#' + author.getDiscriminator();
+
         return new ServerCommandSource(new DiscordCommandOutput(), serverWorld == null ? Vec3d.ZERO : Vec3d.of(serverWorld.getSpawnPos()), Vec2f.ZERO, serverWorld, 4, username, new LiteralText(username), getServer(), null);
     }
 
