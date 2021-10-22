@@ -79,9 +79,13 @@ public class DiscordEventListener extends ListenerAdapter {
                 String help = """
                         ```
                         =============== Commands ===============
-
+                        
+                        To whitelist yourself on this server use:
+                        !whitelist <minecraft username>
+                        
                         !online: list server online players
                         !tps: shows loaded dimensions tps´s
+                        !spawn: shows the location of spawn
                         !console <command>: executes commands in the server console (admins only)
                         ```""";
                 e.getChannel().sendMessage(help).queue();
@@ -94,7 +98,6 @@ public class DiscordEventListener extends ListenerAdapter {
                 server.getPlayerManager().getPlayerList().forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(new LiteralText("").append(discord).append(msg),false));
             }
         }
-
     }
 
     public ServerCommandSource getDiscordCommandSource(@NotNull MessageReceivedEvent e){
