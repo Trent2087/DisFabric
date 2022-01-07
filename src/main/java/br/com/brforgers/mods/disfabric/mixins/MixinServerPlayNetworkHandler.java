@@ -1,5 +1,6 @@
 package br.com.brforgers.mods.disfabric.mixins;
 
+import br.com.brforgers.mods.disfabric.DisFabric;
 import br.com.brforgers.mods.disfabric.events.ServerChatCallback;
 import net.minecraft.network.MessageType;
 import net.minecraft.network.Packet;
@@ -33,13 +34,15 @@ public abstract class MixinServerPlayNetworkHandler {
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/server/PlayerManager;broadcast(Lnet/minecraft/text/Text;Ljava/util/function/Function;Lnet/minecraft/network/MessageType;Ljava/util/UUID;)V"), method = "handleMessage", cancellable = true)
     private void handleMessage(Message message, CallbackInfo ci) {
-        String string = message.getRaw();
-        String msg = StringUtils.normalizeSpace(string);
-        Text text = new TranslatableText("chat.type.text", this.player.getDisplayName(), msg);
-        Optional<Text> eventResult = ServerChatCallback.EVENT.invoker().onServerChat(this.player, msg, text);
-        if (eventResult.isPresent()) {
-            this.server.getPlayerManager().broadcast(eventResult.get(), MessageType.CHAT, this.player.getUuid());
-            ci.cancel();
+        if (!DisFabric.config.commandsOnly) {
+            String string = message.getRaw();
+            String msg = StringUtils.normalizeSpace(string);
+            Text text = new TranslatableText("chat.type.text", this.player.getDisplayName(), msg);
+            Optional<Text> eventResult = ServerChatCallback.EVENT.invoker().onServerChat(this.player, msg, text);
+            if (eventResult.isPresent()) {
+                this.server.getPlayerManager().broadcast(eventResult.get(), MessageType.CHAT, this.player.getUuid());
+                ci.cancel();
+            }
         }
     }
 }
