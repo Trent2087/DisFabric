@@ -31,52 +31,54 @@ public class DiscordEventListener extends ListenerAdapter {
     public void onMessageReceived(@NotNull MessageReceivedEvent e) {
         MinecraftServer server = getServer();
         if(e.getAuthor() != e.getJDA().getSelfUser() && !e.getAuthor().isBot() && e.getChannel().getId().equals(DisFabric.config.channelId) && server != null) {
-            if(e.getMessage().getContentRaw().startsWith("!console") && Arrays.asList(DisFabric.config.adminsIds).contains(e.getAuthor().getId())) {
-                String command = e.getMessage().getContentRaw().replace("!console ", "");
-                server.getCommandManager().execute(getDiscordCommandSource(e), command);
-
-            } else if(e.getMessage().getContentRaw().startsWith("!whitelist")) {
-                String command = e.getMessage().getContentRaw().replace("!whitelist ", "whitelist add ");
-                String minecraftUsername = e.getMessage().getContentRaw().replace("!whitelist ", "");
-
-                String discordID = "<@" + e.getAuthor().getId() + ">";
-                StringBuilder whitelisting = new StringBuilder("```\n!whitelist " + minecraftUsername + " " + discordID + "\n```");
-
-                try {
-                    URL url = new URL("https://api.mojang.com/users/profiles/minecraft/" + minecraftUsername);
-                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod("GET");
-                    if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                        e.getChannel().sendMessage(whitelisting.toString()).queue();
+            String raw = e.getMessage().getContentRaw();
+            if(raw.startsWith("!")) {
+                int space = raw.indexOf(' ', 1);
+                switch (space == -1 ? raw.substring(1) : raw.substring(1, space)) {
+                    case "console" -> {
+                        if(!Arrays.asList(DisFabric.config.adminsIds).contains(e.getAuthor().getId())) return;
+                        String command = raw.substring(space);
+                        server.execute(() -> server.getCommandManager().execute(getDiscordCommandSource(e), command));
                     }
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+                    case "whitelist" -> {
+                        String username = raw.substring(space);
+                        String command = "whitelist add " + username;
 
-                server.execute(() -> server.getCommandManager().execute(getDiscordCommandSource(e), command));
+                        try {
+                            URL url = new URL("https://api.mojang.com/users/profiles/minecraft/" + username);
+                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                            connection.setRequestMethod("GET");
+                            if (connection.getResponseCode() / 100 != 2) {
+                                e.getChannel().sendMessage("Invalid username.").queue();
+                                return;
+                            }
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                        }
 
-            } else if (e.getMessage().getContentRaw().startsWith("!spawn")) {
-                ServerWorld serverWorld = Objects.requireNonNull(getServer()).getOverworld();
-                String spawn = "Spawn location: " + Vec3d.of(serverWorld.getSpawnPos());
-                e.getChannel().sendMessage(spawn).queue();
-
-            } else if(e.getMessage().getContentRaw().startsWith("!online")) {
-                List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
-                StringBuilder playerList = new StringBuilder("```\n=============== Online Players (" + onlinePlayers.size() + ") ===============\n");
-                for (ServerPlayerEntity player : onlinePlayers) {
-                    playerList.append("\n").append(player.getEntityName());
-                }
-                playerList.append("```");
-                e.getChannel().sendMessage(playerList.toString()).queue();
-
-            } else if (e.getMessage().getContentRaw().startsWith("!tps")) {
-                StringBuilder tpss = new StringBuilder("Server TPS: ");
-                double serverTickTime = MathHelper.average(server.lastTickLengths) * 1.0E-6D;
-                tpss.append(Math.min(1000.0 / serverTickTime, 20));
-                e.getChannel().sendMessage(tpss.toString()).queue();
-
-            } else if(e.getMessage().getContentRaw().startsWith("!help")){
-                String help = """
+                        e.getChannel().sendMessage(e.getAuthor().getAsMention() + " ➠ `" + command + '`').queue();
+                        server.execute(() -> server.getCommandManager().execute(getDiscordCommandSource(e), command));
+                    }
+                    case "spawn" -> {
+                        ServerWorld serverWorld = Objects.requireNonNull(getServer()).getOverworld();
+                        e.getChannel().sendMessage("Spawn location: " + Vec3d.of(serverWorld.getSpawnPos())).queue();
+                    }
+                    case "online" -> {
+                        List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
+                        StringBuilder playerList = new StringBuilder("```\n=============== Online Players (" + onlinePlayers.size() + ") ===============\n");
+                        for (ServerPlayerEntity player : onlinePlayers) {
+                            playerList.append("\n").append(player.getEntityName());
+                        }
+                        playerList.append("```");
+                        e.getChannel().sendMessage(playerList.toString()).queue();
+                    }
+                    case "tps" -> {
+                        StringBuilder tps = new StringBuilder("Server TPS: ");
+                        double serverTickTime = MathHelper.average(server.lastTickLengths) * 1.0E-6D;
+                        tps.append(Math.min(1000.0 / serverTickTime, 20));
+                        e.getChannel().sendMessage(tps.toString()).queue();
+                    }
+                    case "help" -> e.getChannel().sendMessage("""
                         ```
                         =============== Commands ===============
                         
@@ -87,9 +89,9 @@ public class DiscordEventListener extends ListenerAdapter {
                         !tps: shows loaded dimensions tps´s
                         !spawn: shows the location of spawn
                         !console <command>: executes commands in the server console (admins only)
-                        ```""";
-                e.getChannel().sendMessage(help).queue();
-
+                        ```""").queue();
+                    default -> e.getChannel().sendMessage("Unknown command. Run `!help` for available commands.").queue();
+                }
             } else if(!DisFabric.config.commandsOnly){
                 LiteralText discord = new LiteralText(DisFabric.config.texts.coloredText.replace("%discordname%", Objects.requireNonNull(e.getMember()).getEffectiveName()).replace("%message%",e.getMessage().getContentDisplay().replace("§", DisFabric.config.texts.removeVanillaFormattingFromDiscord ? "&" : "§").replace("\n", DisFabric.config.texts.removeLineBreakFromDiscord ? " " : "\n") + ((e.getMessage().getAttachments().size() > 0) ? " <att>" : "") + ((e.getMessage().getEmbeds().size() > 0) ? " <embed>" : "")));
                 discord.setStyle(discord.getStyle().withColor(TextColor.fromRgb(Objects.requireNonNull(e.getMember()).getColorRaw())));
