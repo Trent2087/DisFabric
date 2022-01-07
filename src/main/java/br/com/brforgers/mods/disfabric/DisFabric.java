@@ -36,24 +36,26 @@ public class DisFabric implements DedicatedServerModInitializer {
     public void onInitializeServer() {
         AutoConfig.register(Configuration.class, JanksonConfigSerializer::new);
         config = AutoConfig.getConfigHolder(Configuration.class).getConfig();
+        if(config.isWebhookEnabled && (config.webhookURL == null || config.webhookURL.isBlank())) {
+            logger.error("Webhook is not set. Falling back to a regular message. Please set a webhook URL in ~/config/disfabric.json5");
+            config.isWebhookEnabled = false;
+        }
         try {
-            if(config.membersIntents){
-                DisFabric.jda = JDABuilder.createDefault(config.botToken).setHttpClient(new OkHttpClient.Builder()
-                        .protocols(Collections.singletonList(Protocol.HTTP_1_1))
-                        .build())
-                    .setMemberCachePolicy(MemberCachePolicy.ALL)
-                    .enableIntents(GatewayIntent.GUILD_MEMBERS)
-                    .addEventListeners(new DiscordEventListener())
-                    .build();
+            if(config.botToken == null || config.botToken.isBlank()) {
+                logger.error("Unable to login. Please setup the config at ~/config/disfabric.json5");
             } else {
-                DisFabric.jda = JDABuilder.createDefault(config.botToken).setHttpClient(new OkHttpClient.Builder()
-                        .protocols(Collections.singletonList(Protocol.HTTP_1_1))
-                        .build())
-                    .addEventListeners(new DiscordEventListener())
-                    .build();
+                JDABuilder builder = JDABuilder.createDefault(config.botToken).setHttpClient(new OkHttpClient.Builder()
+                                .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+                                .build())
+                        .setMemberCachePolicy(MemberCachePolicy.ALL)
+                        .addEventListeners(new DiscordEventListener());
+                if (config.membersIntents) {
+                    builder.enableIntents(GatewayIntent.GUILD_MEMBERS);
+                }
+                DisFabric.jda = builder.build();
+                DisFabric.jda.awaitReady();
+                DisFabric.textChannel = DisFabric.jda.getTextChannelById(config.channelId);
             }
-            DisFabric.jda.awaitReady();
-            DisFabric.textChannel = DisFabric.jda.getTextChannelById(config.channelId);
         } catch (LoginException ex) {
             jda = null;
             DisFabric.logger.error("Unable to login!", ex);
