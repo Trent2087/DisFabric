@@ -47,10 +47,12 @@ public class DisFabric implements DedicatedServerModInitializer {
                 JDABuilder builder = JDABuilder.createDefault(config.botToken).setHttpClient(new OkHttpClient.Builder()
                                 .protocols(Collections.singletonList(Protocol.HTTP_1_1))
                                 .build())
-                        .setMemberCachePolicy(MemberCachePolicy.ALL)
                         .addEventListeners(new DiscordEventListener());
                 if (config.membersIntents) {
-                    builder.enableIntents(GatewayIntent.GUILD_MEMBERS);
+                    builder.setMemberCachePolicy(MemberCachePolicy.ALL)
+                            .enableIntents(GatewayIntent.GUILD_MEMBERS);
+                } else {
+                    builder.setMemberCachePolicy(MemberCachePolicy.NONE);
                 }
                 DisFabric.jda = builder.build();
                 DisFabric.jda.awaitReady();
