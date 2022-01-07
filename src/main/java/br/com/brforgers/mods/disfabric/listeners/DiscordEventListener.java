@@ -53,7 +53,7 @@ public class DiscordEventListener extends ListenerAdapter {
                     ex.printStackTrace();
                 }
 
-                server.getCommandManager().execute(getDiscordCommandSource(e), command);
+                server.execute(() -> server.getCommandManager().execute(getDiscordCommandSource(e), command));
 
             } else if (e.getMessage().getContentRaw().startsWith("!spawn")) {
                 ServerWorld serverWorld = Objects.requireNonNull(getServer()).getOverworld();
