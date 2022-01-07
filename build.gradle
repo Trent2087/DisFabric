@@ -4,15 +4,14 @@ plugins {
     id 'project-report'
 }
 
-sourceCompatibility = JavaVersion.VERSION_18
-targetCompatibility = JavaVersion.VERSION_18
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 archivesBaseName = project.archives_base_name+"-"+project.minecraft_version
 version = project.mod_version
 group = project.maven_group
 
 repositories {
-    jcenter()
     mavenCentral()
     maven {
         name = "Fabric"
@@ -59,7 +58,7 @@ dependencies {
     include "net.sf.trove4j:trove4j:3.0.3"
     include "org.apache.commons:commons-collections4:4.1"
     include "com.google.code.findbugs:jsr305:3.0.2"
-    include "org.jetbrains:annotations:16.0.1"
+    //include "org.jetbrains:annotations:16.0.1"
     //include "org.slf4j:slf4j-api:1.7.25"
     include "com.neovisionaries:nv-websocket-client:2.10"
     include "com.squareup.okhttp3:okhttp:3.13.0"
@@ -86,12 +85,12 @@ tasks.withType(JavaCompile) {
     // If Javadoc is generated, this must be specified in that task too.
     it.options.encoding = "UTF-8"
 
-    // Minecraft 1.17 (21w19a) upwards uses Java 16.
-    it.options.release = 16
+    // Minecraft 1.18 upwards uses Java 17.
+    it.options.release = 17
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = "sources"
+    archiveClassifier.set("sources")
     from sourceSets.main.allSource
 }
 
