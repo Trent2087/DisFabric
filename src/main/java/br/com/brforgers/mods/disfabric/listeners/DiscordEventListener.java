@@ -37,11 +37,11 @@ public class DiscordEventListener extends ListenerAdapter {
                 switch (space == -1 ? raw.substring(1) : raw.substring(1, space)) {
                     case "console" -> {
                         if(!Arrays.asList(DisFabric.config.adminsIds).contains(e.getAuthor().getId())) return;
-                        String command = raw.substring(space);
+                        String command = raw.substring(space + 1);
                         server.execute(() -> server.getCommandManager().execute(getDiscordCommandSource(e), command));
                     }
                     case "whitelist" -> {
-                        String username = raw.substring(space);
+                        String username = raw.substring(space + 1);
                         String command = "whitelist add " + username;
 
                         try {
