@@ -65,9 +65,9 @@ public class DiscordEventListener extends ListenerAdapter {
                     }
                     case "online" -> {
                         List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
-                        StringBuilder playerList = new StringBuilder("```\n=============== Online Players (" + onlinePlayers.size() + ") ===============\n");
+                        StringBuilder playerList = new StringBuilder("```ansi\n=============== \u001B[32;1mOnline Players\u001B[0m (\u001B[34m" + onlinePlayers.size() + "\u001B[0m) ===============\n");
                         for (ServerPlayerEntity player : onlinePlayers) {
-                            playerList.append("\n").append(player.getEntityName());
+                            playerList.append("\n - \u001B[36m").append(player.getEntityName()).append("\u001B[0m");
                         }
                         playerList.append("```");
                         e.getChannel().sendMessage(playerList.toString()).queue();
@@ -79,17 +79,17 @@ public class DiscordEventListener extends ListenerAdapter {
                         e.getChannel().sendMessage(tps.toString()).queue();
                     }
                     case "help" -> e.getChannel().sendMessage("""
-                        ```
-                        =============== Commands ===============
-                        
-                        To whitelist yourself on this server use:
-                        !whitelist <minecraft username>
-                        
-                        !online: list server online players
-                        !tps: shows loaded dimensions tps´s
-                        !spawn: shows the location of spawn
-                        !console <command>: executes commands in the server console (admins only)
-                        ```""").queue();
+                            ```ansi
+                            =============== \u001B[32;1mCommands\u001B[0m ===============
+                                                    
+                            To whitelist yourself on this server use:
+                            !\u001B[33mwhitelist\u001B[0m <\u001B[30mminecraft username\u001B[0m>
+                                                    
+                            !\u001B[33monline\u001B[0m: list server online players
+                            !\u001B[33mtps\u001B[0m: shows loaded dimensions tps's
+                            !\u001B[33mspawn\u001B[0m: shows the location of spawn
+                            !\u001B[33mconsole\u001B[0m <\u001B[30mcommand\u001B[0m>: executes commands in the server console (admins only)
+                            ```""").queue();
                     default -> e.getChannel().sendMessage("Unknown command. Run `!help` for available commands.").queue();
                 }
             } else if(!DisFabric.config.commandsOnly){
