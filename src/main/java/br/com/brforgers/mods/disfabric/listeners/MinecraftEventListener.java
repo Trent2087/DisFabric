@@ -1,17 +1,16 @@
 package br.com.brforgers.mods.disfabric.listeners;
 
 import br.com.brforgers.mods.disfabric.DisFabric;
-import br.com.brforgers.mods.disfabric.utils.Utils;
 import br.com.brforgers.mods.disfabric.events.*;
 import br.com.brforgers.mods.disfabric.utils.MarkdownParser;
-
-import java.util.Optional;
-
+import br.com.brforgers.mods.disfabric.utils.Utils;
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONObject;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.minecraft.text.Text;
 import net.minecraft.util.Pair;
+
+import java.util.Optional;
 
 public class MinecraftEventListener {
     public void init() {
@@ -22,7 +21,7 @@ public class MinecraftEventListener {
                     if (DisFabric.config.isWebhookEnabled) {
                         JSONObject body = new JSONObject();
                         body.put("username", playerEntity.getEntityName());
-                        body.put("avatar_url", "https://mc-heads.net/avatar/" + (DisFabric.config.useUUIDInsteadNickname ? playerEntity.getUuid() : playerEntity.getEntityName()));
+                        body.put("avatar_url", "https://crafatar.com/avatars/" + playerEntity.getUuid() + ".png");
                         JSONObject allowed_mentions = new JSONObject();
                         allowed_mentions.put("parse", new String[]{"users", "roles"});
                         body.put("allowed_mentions", allowed_mentions);

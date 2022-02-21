@@ -31,10 +31,6 @@ public class Configuration implements ConfigData {
     @ConfigEntry.Category(value = "Discord")
     public String webhookURL = "";
 
-    @Comment(value = "Use UUID instead nickname to request player head on webhook")
-    @ConfigEntry.Category(value = "Discord")
-    public Boolean useUUIDInsteadNickname = true;
-
     @Comment(value = """
             Admins ids in Discord; see https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-
             If more than one, enclose each id in quotation marks separated by commas, like this:
