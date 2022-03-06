@@ -46,10 +46,6 @@ public class Configuration implements ConfigData {
     @ConfigEntry.Category(value = "Discord")
     public String channelId = "";
 
-    @Comment(value = "If you enabled \"Server Members Intent\" in the bot's config page, change it to true. (This is only necessary if you want to enable discord mentions inside the game)")
-    @ConfigEntry.Category(value = "Discord")
-    public boolean membersIntents = false;
-
     @Comment(value = "Should announce when a players join/leave the server?")
     @ConfigEntry.Category(value = "Discord")
     public boolean announcePlayers = true;
@@ -136,32 +132,5 @@ public class Configuration implements ConfigData {
                 %advancement% | Advancement name""")
         @ConfigEntry.Category(value = "Texts")
         public String advancementGoal = "%playername% has reached the goal **[%advancement%]**";
-
-        @Comment(value = """
-                Discord -> Minecraft
-                Colored part of the message, this part of the message will receive the same color as the role in the discord, comes before the colorless part
-                Available placeholders:
-                %discordname% | User nickname in the guild
-                %message% | The message""")
-        @ConfigEntry.Category(value = "Texts")
-        public String coloredText = "[Discord] ";
-
-        @Comment(value = """
-                Discord -> Minecraft
-                Colorless (white) part of the message, I think you already know what it is by the other comment
-                Available placeholders:
-                %discordname% | Nickname of the user in the guild
-                %message% | The message""")
-        @ConfigEntry.Category(value = "Texts")
-        public String colorlessText = "<%discordname%> %message%";
-
-        @Comment(value = "Replaces the § symbol with & in any discord message to avoid formatted messages")
-        @ConfigEntry.Category(value = "Texts")
-        public Boolean removeVanillaFormattingFromDiscord = false;
-
-        @Comment(value = "Removes line break from any discord message to avoid spam")
-        @ConfigEntry.Category(value = "Texts")
-        public Boolean removeLineBreakFromDiscord = false;
-
     }
 }

@@ -2,18 +2,23 @@ package br.com.brforgers.mods.disfabric.listeners;
 
 import br.com.brforgers.mods.disfabric.DisFabric;
 import br.com.brforgers.mods.disfabric.utils.DiscordCommandOutput;
-import br.com.brforgers.mods.disfabric.utils.MarkdownParser;
+import br.com.brforgers.mods.disfabric.utils.Utils;
+import dev.gegy.mdchat.TextStyler;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.ClickEvent;
 import net.minecraft.text.LiteralText;
-import net.minecraft.text.TextColor;
+import net.minecraft.text.Style;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
@@ -27,6 +32,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class DiscordEventListener extends ListenerAdapter {
+    private static final Style LINK = Style.EMPTY.withFormatting(Formatting.AQUA, Formatting.UNDERLINE);
 
     public void onMessageReceived(@NotNull MessageReceivedEvent e) {
         MinecraftServer server = getServer();
@@ -92,12 +98,19 @@ public class DiscordEventListener extends ListenerAdapter {
                             ```""").queue();
                     default -> e.getChannel().sendMessage("Unknown command. Run `!help` for available commands.").queue();
                 }
-            } else if(!DisFabric.config.commandsOnly){
-                LiteralText discord = new LiteralText(DisFabric.config.texts.coloredText.replace("%discordname%", Objects.requireNonNull(e.getMember()).getEffectiveName()).replace("%message%",e.getMessage().getContentDisplay().replace("§", DisFabric.config.texts.removeVanillaFormattingFromDiscord ? "&" : "§").replace("\n", DisFabric.config.texts.removeLineBreakFromDiscord ? " " : "\n") + ((e.getMessage().getAttachments().size() > 0) ? " <att>" : "") + ((e.getMessage().getEmbeds().size() > 0) ? " <embed>" : "")));
-                discord.setStyle(discord.getStyle().withColor(TextColor.fromRgb(Objects.requireNonNull(e.getMember()).getColorRaw())));
-                LiteralText msg = new LiteralText(DisFabric.config.texts.colorlessText.replace("%discordname%", Objects.requireNonNull(e.getMember()).getEffectiveName()).replace("%message%", MarkdownParser.parseMarkdown(e.getMessage().getContentDisplay().replace("§", DisFabric.config.texts.removeVanillaFormattingFromDiscord ? "&" : "§").replace("\n", DisFabric.config.texts.removeLineBreakFromDiscord ? " " : "\n") + ((e.getMessage().getAttachments().size() > 0) ? " <att>" : "") + ((e.getMessage().getEmbeds().size() > 0) ? " <embed>" : ""))));
-                msg.setStyle(msg.getStyle().withColor(TextColor.fromFormatting(Formatting.WHITE)));
-                server.getPlayerManager().getPlayerList().forEach(serverPlayerEntity -> serverPlayerEntity.sendMessage(new LiteralText("").append(discord).append(msg),false));
+            } else if (!DisFabric.config.commandsOnly) {
+                var username = Utils.convertMemberToFormattedText(e.getAuthor(), e.getMember(), "");
+
+                var styledMessage = TextStyler.INSTANCE.apply(raw);
+
+                var message = styledMessage == null ? new LiteralText("") : styledMessage.shallowCopy();
+
+                for (var attachment : e.getMessage().getAttachments()) {
+                    var style = LINK.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, attachment.getUrl()));
+                    message.append(" <").append(new LiteralText(attachment.getFileName()).fillStyle(style)).append(">");
+                }
+
+                server.getPlayerManager().broadcast(new TranslatableText("chat.type.text", username, message), MessageType.CHAT, Util.NIL_UUID);
             }
         }
     }

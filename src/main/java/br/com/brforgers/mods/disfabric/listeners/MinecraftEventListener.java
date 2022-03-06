@@ -1,14 +1,16 @@
 package br.com.brforgers.mods.disfabric.listeners;
 
 import br.com.brforgers.mods.disfabric.DisFabric;
-import br.com.brforgers.mods.disfabric.events.*;
-import br.com.brforgers.mods.disfabric.utils.MarkdownParser;
+import br.com.brforgers.mods.disfabric.events.PlayerAdvancementCallback;
+import br.com.brforgers.mods.disfabric.events.PlayerDeathCallback;
+import br.com.brforgers.mods.disfabric.events.ServerChatCallback;
 import br.com.brforgers.mods.disfabric.utils.Utils;
+import dev.gegy.mdchat.TextStyler;
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONObject;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
-import net.minecraft.text.Text;
-import net.minecraft.util.Pair;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.text.TranslatableText;
 
 import java.util.Optional;
 
@@ -17,29 +19,30 @@ public class MinecraftEventListener {
         if (!DisFabric.config.commandsOnly) {
             ServerChatCallback.EVENT.register((playerEntity, rawMessage, message) -> {
                 if (!DisFabric.stop) {
-                    Pair<String, String> convertedPair = Utils.convertMentionsFromNames(rawMessage);
+                    String convertedString = Utils.convertMentionsFromNames(rawMessage);
                     if (DisFabric.config.isWebhookEnabled) {
                         JSONObject body = new JSONObject();
                         body.put("username", playerEntity.getEntityName());
                         body.put("avatar_url", "https://crafatar.com/avatars/" + playerEntity.getUuid() + ".png");
                         JSONObject allowed_mentions = new JSONObject();
-                        allowed_mentions.put("parse", new String[]{"users", "roles"});
+                        allowed_mentions.put("parse", new String[]{"users"});
                         body.put("allowed_mentions", allowed_mentions);
-                        body.put("content", convertedPair.getLeft());
+                        body.put("content", convertedString);
                         try {
                             Unirest.post(DisFabric.config.webhookURL).header("Content-Type", "application/json").body(body).asJsonAsync();
                         } catch (Exception ex) {
                             ex.printStackTrace();
                         }
                     } else {
-                        DisFabric.textChannel.sendMessage(DisFabric.config.texts.playerMessage.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName())).replace("%playermessage%", convertedPair.getLeft())).queue();
+                        DisFabric.textChannel.sendMessage(DisFabric.config.texts.playerMessage.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName())).replace("%playermessage%", convertedString)).queue();
                     }
-                    if (DisFabric.config.modifyChatMessages) {
-                        String jsonString = Text.Serializer.toJson(message);
-                        JSONObject newComponent = new JSONObject(jsonString);
-                        newComponent.getJSONArray("with").put(1, MarkdownParser.parseMarkdown(convertedPair.getRight()));
-                        Text finalText = Text.Serializer.fromJson(newComponent.toString());
-                        return Optional.ofNullable(finalText);
+                    // If it returns itself, there was no new mention.
+                    // If it doesn't return itself, it's always mutated.
+                    // So: why bother doing .equals when it's either it'll either waste cycles or short circuits.
+                    //noinspection StringEquality
+                    if (DisFabric.config.modifyChatMessages && rawMessage != convertedString && message instanceof TranslatableText translatableText) {
+                        translatableText.getArgs()[1] = TextStyler.INSTANCE.apply(convertedString);
+                        return Optional.of(translatableText);
                     }
                 }
                 return Optional.empty();
@@ -61,15 +64,15 @@ public class MinecraftEventListener {
                 }
             });
 
-            PlayerJoinCallback.EVENT.register((connection, playerEntity) -> {
+            ServerPlayConnectionEvents.JOIN.register((handler, $2, $3) -> {
                 if (DisFabric.config.announcePlayers && !DisFabric.stop) {
-                    DisFabric.textChannel.sendMessage(DisFabric.config.texts.joinServer.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
+                    DisFabric.textChannel.sendMessage(DisFabric.config.texts.joinServer.replace("%playername%", MarkdownSanitizer.escape(handler.player.getEntityName()))).queue();
                 }
             });
 
-            PlayerLeaveCallback.EVENT.register((playerEntity) -> {
+            ServerPlayConnectionEvents.DISCONNECT.register((handler, $2) -> {
                 if (DisFabric.config.announcePlayers && !DisFabric.stop) {
-                    DisFabric.textChannel.sendMessage(DisFabric.config.texts.leftServer.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
+                    DisFabric.textChannel.sendMessage(DisFabric.config.texts.leftServer.replace("%playername%", MarkdownSanitizer.escape(handler.player.getEntityName()))).queue();
                 }
             });
         }

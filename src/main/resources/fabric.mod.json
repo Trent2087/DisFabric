@@ -18,6 +18,9 @@
 
   "environment": "server",
   "entrypoints": {
+    "markdown-chat": [
+      "br.com.brforgers.mods.disfabric.MarkdownBootstrap"
+    ],
     "server": [
       "br.com.brforgers.mods.disfabric.DisFabric"
     ]
@@ -28,6 +31,7 @@
   "depends": {
     "fabricloader": ">=0.12.8",
     "fabric": "*",
+    "markdown_chat": "*",
     "minecraft": "1.18.x",
     "java": ">=17"
   }

@@ -9,8 +9,10 @@ import me.sargunvohra.mcmods.autoconfig1u.serializer.JanksonConfigSerializer;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
@@ -19,8 +21,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import javax.security.auth.login.LoginException;
 import java.util.Collections;
+import java.util.Objects;
 
 public class DisFabric implements DedicatedServerModInitializer {
 
@@ -28,6 +32,7 @@ public class DisFabric implements DedicatedServerModInitializer {
     public static Logger logger = LogManager.getLogger(MOD_ID);
     public static Configuration config;
     public static JDA jda;
+    public static Guild guild;
     public static TextChannel textChannel;
 
     public static boolean stop = false;
@@ -47,54 +52,35 @@ public class DisFabric implements DedicatedServerModInitializer {
                 JDABuilder builder = JDABuilder.createDefault(config.botToken).setHttpClient(new OkHttpClient.Builder()
                                 .protocols(Collections.singletonList(Protocol.HTTP_1_1))
                                 .build())
-                        .addEventListeners(new DiscordEventListener());
-                if (config.membersIntents) {
-                    builder.setMemberCachePolicy(MemberCachePolicy.ALL)
-                            .enableIntents(GatewayIntent.GUILD_MEMBERS);
-                } else {
-                    builder.setMemberCachePolicy(MemberCachePolicy.NONE);
-                }
+                        .setChunkingFilter(ChunkingFilter.ALL)
+                        .addEventListeners(new DiscordEventListener())
+                        .setMemberCachePolicy(MemberCachePolicy.ALL)
+                        .enableIntents(GatewayIntent.GUILD_MEMBERS);
                 DisFabric.jda = builder.build();
                 DisFabric.jda.awaitReady();
-                DisFabric.textChannel = DisFabric.jda.getTextChannelById(config.channelId);
+                DisFabric.textChannel = Objects.requireNonNull(DisFabric.jda.getTextChannelById(config.channelId), "No such Text Channel");
+                DisFabric.guild = DisFabric.textChannel.getGuild();
             }
-        } catch (LoginException ex) {
+        } catch (LoginException | InterruptedException ex) {
             jda = null;
             DisFabric.logger.error("Unable to login!", ex);
-        } catch (InterruptedException ex) {
-            jda = null;
-            DisFabric.logger.error(ex);
         }
         if(jda != null) {
-            if(!config.botGameStatus.isEmpty())
+            if (!config.botGameStatus.isEmpty())
                 jda.getPresence().setActivity(Activity.playing(config.botGameStatus));
 
-            ServerLifecycleEvents.SERVER_STARTED.register((server) -> {
-                if(!config.commandsOnly) {
-                    textChannel.sendMessage(DisFabric.config.texts.serverStarted).queue();
-                }
-            });
+            if (!config.commandsOnly) {
+                ServerLifecycleEvents.SERVER_STARTED.register((server) -> textChannel.sendMessage(DisFabric.config.texts.serverStarted).queue());
+            }
 
             ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
                 stop = true;
-                //logger.error(stop);
-                if(!config.commandsOnly) {
-                    textChannel.sendMessage(DisFabric.config.texts.serverStopped).queue();
-                }
-                try {
-                    Thread.sleep(250);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                if (!config.commandsOnly) {
+                    textChannel.sendMessage(DisFabric.config.texts.serverStopped).complete();
                 }
                 Unirest.shutDown();
-                DisFabric.jda.shutdown();
-                try {
-                    Thread.sleep(250);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                DisFabric.jda.shutdownNow();
             });
-            //ServerLifecycleEvents.SERVER_STOPPED.register((server) -> DisFabric.jda.shutdownNow());
             new MinecraftEventListener().init();
 
         }
