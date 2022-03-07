@@ -18,11 +18,11 @@ import java.util.regex.Pattern;
 public class DiscordChatExtension implements Parser.ParserExtension {
     public static final Extension INSTANCE = new DiscordChatExtension();
     private static final Pattern
-            USER = Pattern.compile("@!?(\\d++)"),
-            ROLE = Pattern.compile("@&(\\d++)"),
-            CHANNEL = Pattern.compile("#(\\d++)"),
-            EMOJI = Pattern.compile("(a?):([a-zA-Z0-9_-]++):(\\d++)"),
-            TIME = Pattern.compile("t:(-?\\d++)(?::([dftDFTR]))?");
+            USER = Pattern.compile("@!?(\\d{1,19})"),
+            ROLE = Pattern.compile("@&(\\d{1,19})"),
+            CHANNEL = Pattern.compile("#(\\d{1,19})"),
+            EMOJI = Pattern.compile("(a?):([a-zA-Z0-9_-]++):(\\d{1,19})"),
+            TIME = Pattern.compile("t:(-?\\d{1,19})(?::([dftDFTR]))?");
 
     private DiscordChatExtension() {
     }
@@ -60,25 +60,28 @@ public class DiscordChatExtension implements Parser.ParserExtension {
                 }
                 if (why.isEmpty()) return 0;
                 Matcher matcher = USER.matcher(why);
-                if (matcher.matches()) {
-                    insertBetween(opener, closer, new MentionNode(MentionType.USER, Long.parseUnsignedLong(matcher.group(1))));
-                    return 1;
-                }
-                if (matcher.usePattern(ROLE).matches()) {
-                    insertBetween(opener, closer, new MentionNode(MentionType.ROLE, Long.parseUnsignedLong(matcher.group(1))));
-                    return 1;
-                }
-                if (matcher.usePattern(CHANNEL).matches()) {
-                    insertBetween(opener, closer, new MentionNode(MentionType.CHANNEL, Long.parseUnsignedLong(matcher.group(1))));
-                    return 1;
-                }
-                if (matcher.usePattern(EMOJI).matches()) {
-                    insertBetween(opener, closer, new EmoteNode("a".equals(matcher.group(1)), matcher.group(2), Long.parseUnsignedLong(matcher.group(3))));
-                    return 1;
-                }
-                if (matcher.usePattern(TIME).matches()) {
-                    insertBetween(opener, closer, new TimeNode(Long.parseLong(matcher.group(1)), TimeStyle.of(matcher.group(2))));
-                    return 1;
+                try {
+                    if (matcher.matches()) {
+                        insertBetween(opener, closer, new MentionNode(MentionType.USER, Long.parseUnsignedLong(matcher.group(1))));
+                        return 1;
+                    }
+                    if (matcher.usePattern(ROLE).matches()) {
+                        insertBetween(opener, closer, new MentionNode(MentionType.ROLE, Long.parseUnsignedLong(matcher.group(1))));
+                        return 1;
+                    }
+                    if (matcher.usePattern(CHANNEL).matches()) {
+                        insertBetween(opener, closer, new MentionNode(MentionType.CHANNEL, Long.parseUnsignedLong(matcher.group(1))));
+                        return 1;
+                    }
+                    if (matcher.usePattern(EMOJI).matches()) {
+                        insertBetween(opener, closer, new EmoteNode("a".equals(matcher.group(1)), matcher.group(2), Long.parseUnsignedLong(matcher.group(3))));
+                        return 1;
+                    }
+                    if (matcher.usePattern(TIME).matches()) {
+                        insertBetween(opener, closer, new TimeNode(Long.parseLong(matcher.group(1)), TimeStyle.of(matcher.group(2))));
+                        return 1;
+                    }
+                } catch (NumberFormatException ignore) {
                 }
             }
             return 0;

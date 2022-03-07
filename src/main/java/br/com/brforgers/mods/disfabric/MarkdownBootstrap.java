@@ -11,7 +11,6 @@ import net.dv8tion.jda.api.entities.Channel;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.fabricmc.fabric.api.event.Event;
-import net.minecraft.text.LiteralText;
 import org.commonmark.parser.Parser;
 
 import java.util.Collections;
@@ -26,8 +25,12 @@ public class MarkdownBootstrap implements StylerBootstrap {
         parser.extensions(Collections.singleton(DiscordChatExtension.INSTANCE));
         styler.register((node, child) -> {
             if (node instanceof EmoteNode emote) {
-                return new LiteralText("::e~");
+                return Utils.convertUnknownEntityToFormattedText(emote.id, "emote", ":" + emote.name + ":");
             } else if (node instanceof MentionNode mention) {
+                if (DisFabric.jda == null) {
+                    // We cannot do much without JDA, so, just return default.
+                    return child.get();
+                }
                 switch (mention.type) {
                     case USER -> {
                         User user = DisFabric.jda.getUserById(mention.id);
@@ -46,7 +49,7 @@ public class MarkdownBootstrap implements StylerBootstrap {
                     }
                 }
             } else if (node instanceof TimeNode time) {
-                return new LiteralText("::t~");
+                return Utils.convertUnknownEntityToFormattedText(time.timestamp, "time", time.style.style(time.timestamp));
             }
             return null;
         });

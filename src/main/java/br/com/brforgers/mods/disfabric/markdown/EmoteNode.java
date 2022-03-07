@@ -9,11 +9,11 @@ import org.commonmark.node.CustomNode;
 public class EmoteNode extends CustomNode {
     public final boolean animated;
     public final String name;
-    public final long snowflake;
+    public final long id;
 
-    EmoteNode(boolean animated, String name, long snowflake) {
+    EmoteNode(boolean animated, String name, long id) {
         this.animated = animated;
         this.name = name;
-        this.snowflake = snowflake;
+        this.id = id;
     }
 }
