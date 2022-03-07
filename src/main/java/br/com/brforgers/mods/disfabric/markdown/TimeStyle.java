@@ -16,10 +16,10 @@ import java.util.concurrent.TimeUnit;
 public enum TimeStyle {
     SHORT_TIME('t', DateTimeFormatter.ofPattern("HH:mmX")),
     LONG_TIME('T', DateTimeFormatter.ofPattern("HH:mm:ssX")),
-    SHORT_DATE('d', DateTimeFormatter.ofPattern("yyyy-MM-ddX")),
-    LONG_DATE('D', DateTimeFormatter.ofPattern("dd LLL yyyyX")),
-    SHORT_DATETIME('f', DateTimeFormatter.ofPattern("dd LLL yyyy HH:mmX")),
-    LONG_DATETIME('F', DateTimeFormatter.ofPattern("EEE dd LLL yyyyX HH:mmX")),
+    SHORT_DATE('d', DateTimeFormatter.ofPattern("uuuu-MM-ddX")),
+    LONG_DATE('D', DateTimeFormatter.ofPattern("dd LLL uuuuX")),
+    SHORT_DATETIME('f', DateTimeFormatter.ofPattern("dd LLL uuuu HH:mmX")),
+    LONG_DATETIME('F', DateTimeFormatter.ofPattern("EEE dd LLL uuuuX HH:mmX")),
     RELATIVE_TIME('R', null);
 
     private static final ChronoUnit[] UNIT_A = {
