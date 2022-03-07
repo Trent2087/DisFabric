@@ -1,12 +1,11 @@
 package br.com.brforgers.mods.disfabric.markdown;// Created 2022-04-03T04:52:12
 
-import com.ibm.icu.text.RelativeDateTimeFormatter;
-
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.ValueRange;
 import java.util.concurrent.TimeUnit;
 
@@ -23,6 +22,13 @@ public enum TimeStyle {
     LONG_DATETIME('F', DateTimeFormatter.ofPattern("EEE dd LLL yyyyX HH:mmX")),
     RELATIVE_TIME('R', null);
 
+    private static final ChronoUnit[] UNIT_A = {
+            ChronoUnit.MINUTES, ChronoUnit.HOURS, ChronoUnit.DAYS, ChronoUnit.WEEKS, ChronoUnit.MONTHS,
+            ChronoUnit.YEARS, ChronoUnit.DECADES, ChronoUnit.CENTURIES, ChronoUnit.MILLENNIA, ChronoUnit.ERAS
+    }, UNIT_B = {
+            ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS, ChronoUnit.DAYS, ChronoUnit.WEEKS,
+            ChronoUnit.MONTHS, ChronoUnit.YEARS, ChronoUnit.DECADES, ChronoUnit.CENTURIES, ChronoUnit.MILLENNIA
+    };
     private static final ValueRange EPOCH_DAY_RANGE = ChronoField.EPOCH_DAY.range();
 
     public final char t;
@@ -56,39 +62,23 @@ public enum TimeStyle {
         if (this == RELATIVE_TIME) {
             double relative = in - (System.currentTimeMillis() / 1000D);
             var unit = smallestUnit(Math.abs(relative));
-            return RelativeDateTimeFormatter.getInstance().format(mux(relative, unit), unit);
+            double duration = mux(Math.abs(relative), unit);
+            var str = unit.toString().toLowerCase();
+            return relative <= 1 ? duration + " " + str + " ago" : "in " + duration + ' ' + str;
         }
         return "Invalid date style";
     }
 
-    private static RelativeDateTimeFormatter.RelativeDateTimeUnit smallestUnit(double abs) {
-        if (abs < TimeUnit.MINUTES.toSeconds(1)) {
-            return RelativeDateTimeFormatter.RelativeDateTimeUnit.SECOND;
+    private static ChronoUnit smallestUnit(double abs) {
+        for (int i = 0; i < UNIT_A.length; i++) {
+            if (abs < UNIT_A[i].getDuration().toSeconds()) {
+                return UNIT_B[i];
+            }
         }
-        if (abs < TimeUnit.HOURS.toSeconds(1)) {
-            return RelativeDateTimeFormatter.RelativeDateTimeUnit.MINUTE;
-        }
-        if (abs < TimeUnit.DAYS.toSeconds(1)) {
-            return RelativeDateTimeFormatter.RelativeDateTimeUnit.HOUR;
-        }
-        if (abs < TimeUnit.DAYS.toSeconds(30)) {
-            return RelativeDateTimeFormatter.RelativeDateTimeUnit.DAY;
-        }
-        if (abs < TimeUnit.DAYS.toSeconds(365)) {
-            return RelativeDateTimeFormatter.RelativeDateTimeUnit.MONTH;
-        }
-        return RelativeDateTimeFormatter.RelativeDateTimeUnit.YEAR;
+        return ChronoUnit.ERAS;
     }
 
-    private static double mux(double relative, RelativeDateTimeFormatter.RelativeDateTimeUnit unit) {
-        return switch (unit) {
-            case SECOND -> relative;
-            case MINUTE -> relative / 60D;
-            case HOUR -> relative / 3600D;
-            case DAY -> relative / 86400D;
-            case MONTH -> relative / 2592000D;
-            case YEAR -> relative / 31536000D;
-            default -> throw new AssertionError();
-        };
+    private static double mux(double relative, ChronoUnit unit) {
+        return ((long) (relative / unit.getDuration().toSeconds() * 1000D)) / 1000D;
     }
 }
