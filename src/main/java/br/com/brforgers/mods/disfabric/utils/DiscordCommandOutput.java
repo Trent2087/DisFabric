@@ -20,7 +20,7 @@ public class DiscordCommandOutput implements CommandOutput {
         DisFabric.logger.info(messageString);
         long currentOutputMillis = System.currentTimeMillis();
         if((outputString.length() + messageString.length()) > 2000) {
-            DisFabric.textChannel.sendMessage(outputString).queue();
+            DisFabric.bridgeChannel.sendMessage(outputString).queue();
         }else{
             outputString.append("> ").append(messageString).append("\n");
         }
@@ -28,7 +28,7 @@ public class DiscordCommandOutput implements CommandOutput {
             outputThread = new Thread(() -> new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    DisFabric.textChannel.sendMessage(outputString).queue();
+                    DisFabric.bridgeChannel.sendMessage(outputString).queue();
                     outputString = new StringBuilder();
                 }
             }, 51));

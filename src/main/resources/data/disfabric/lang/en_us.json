@@ -1,0 +1,9 @@
+{
+  "disfabric.report.bug.success": "Your bug was successfully reported. See %s.",
+  "disfabric.report.bug.failure": "Something went wrong reporting your bug: %s. %s",
+  "disfabric.report.user.success": "%s was successfully reported.",
+  "disfabric.report.user.failure": "Something went wrong reporting %s: %s. %s",
+  "disfabric.suggest.success": "Your suggestion was successfully sent. See %s.",
+  "disfabric.suggest.failure": "Something went wrong processing your suggestion: %s. %s",
+  "disfabric.tryagain": "Try again?"
+}

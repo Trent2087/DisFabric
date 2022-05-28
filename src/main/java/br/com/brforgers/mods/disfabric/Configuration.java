@@ -46,6 +46,26 @@ public class Configuration implements ConfigData {
     @ConfigEntry.Category(value = "Discord")
     public String channelId = "";
 
+    @Comment("Bug reports channel in Discord. Will be disabled when set to 0.")
+    @ConfigEntry.Category("Discord")
+    public long bugReportChannel = 0L;
+
+    @Comment("Create thread on bug report? Will be automatically disabled if disallowed.")
+    @ConfigEntry.Category("Discord")
+    public boolean bugReportAutoThread = true;
+
+    @Comment("Player reports channel in Discord. Will be disabled when set to 0.")
+    @ConfigEntry.Category("Discord")
+    public long userReportChannel = 0L;
+
+    @Comment("Role to ping on player report. Staff role recommended. Will not ping when set to 0.")
+    @ConfigEntry.Category("Discord")
+    public long userReportStaffRole = 0L;
+
+    @Comment("Suggestions channel in Discord. Will be disabled when set to 0.")
+    @ConfigEntry.Category("Discord")
+    public long suggestionChannel = 0L;
+
     @Comment(value = "Should announce when a players join/leave the server?")
     @ConfigEntry.Category(value = "Discord")
     public boolean announcePlayers = true;

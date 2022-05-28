@@ -31,6 +31,7 @@
   "depends": {
     "fabricloader": ">=0.12.8",
     "fabric": "*",
+    "fabric-language-kotlin": "*",
     "markdown_chat": "*",
     "minecraft": "1.18.x",
     "java": ">=17"

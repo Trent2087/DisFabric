@@ -1,14 +1,11 @@
 package br.com.brforgers.mods.disfabric.utils;
 
 import br.com.brforgers.mods.disfabric.DisFabric;
-import net.dv8tion.jda.api.entities.Channel;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.User;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.MutableText;
+import com.mojang.brigadier.context.CommandContext;
+import net.dv8tion.jda.api.entities.*;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.*;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,6 +13,13 @@ import java.util.regex.Pattern;
 public class Utils {
     private static final Pattern
             userMention = Pattern.compile("@([^@#:\\s][^@#:]{0,30}[^@#:\\s])(?:#(\\d{4}))?");
+
+    /**
+     * Provides a face avatar for use with webhooks and embeds.
+     */
+    public static String playerAvatarUrl(PlayerEntity player) {
+        return "https://crafatar.com/avatars/" + player.getUuid() + ".png";
+    }
 
     public static String convertMentionsFromNames(String message) {
 
@@ -134,7 +138,7 @@ public class Utils {
      *
      * @param role    The role to get the details of.
      * @param prepend The string to prepend to the username.
-     * @return The username formatted with a hover & click event.
+     * @return The role formatted with a hover & click event.
      */
     public static MutableText convertRoleToFormattedText(Role role, String prepend) {
         var username = new LiteralText(prepend + role.getName());
@@ -148,11 +152,11 @@ public class Utils {
     }
 
     /**
-     * Converts the given role to a coloured mention.
+     * Converts the given channel to a coloured mention.
      *
      * @param channel The role to get the details of.
      * @param prepend The string to prepend to the username.
-     * @return The username formatted with a hover & click event.
+     * @return The channel formatted with a hover & click event.
      */
     public static MutableText convertChannelToFormattedText(Channel channel, String prepend) {
         var username = new LiteralText(prepend + channel.getName());
@@ -162,5 +166,58 @@ public class Utils {
         memberStyle = memberStyle.withColor(0x7289DA);
         username.setStyle(memberStyle);
         return username;
+    }
+
+    /**
+     * Converts the given channel into a clickable mention.
+     *
+     * @param channel The channel to get the details of.
+     * @param prepend The string to prepend to the username.
+     * @return The channel formatted with a hover & click event.
+     */
+    public static MutableText convertChannelToFormattedLink(GuildMessageChannel channel, String prepend) {
+        var channelName = new LiteralText(prepend + channel.getName());
+        var channelStyle = channelName.getStyle();
+        channelStyle = channelStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText("Discord Channel\n" + channel.getIdLong())));
+        channelStyle = channelStyle.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, convertChannelToLink(channel)));
+        channelStyle = channelStyle.withColor(0x7289DA);
+        channelName.setStyle(channelStyle);
+        return channelName;
+    }
+
+    /**
+     * Converts the given message into a clickable mention.
+     *
+     * @param message The channel to get the details of.
+     * @param prepend The string to prepend to the username.
+     * @return The channel formatted with a hover & click event.
+     */
+    public static MutableText convertMessageToFormattedLink(Message message, String prepend) {
+        var channel = message.getChannel();
+        var channelName = new LiteralText(prepend + channel.getName());
+        var channelStyle = channelName.getStyle();
+        channelStyle = channelStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText("Discord Channel\n" + channel.getIdLong())));
+        channelStyle = channelStyle.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, message.getJumpUrl()));
+        channelStyle = channelStyle.withColor(0x7289DA);
+        channelName.setStyle(channelStyle);
+        return channelName;
+    }
+
+    /**
+     * Converts the given channel into a link.
+     *
+     * @param channel The channel to convert into a link.
+     * @return The link to the channel.
+     */
+    public static String convertChannelToLink(Channel channel) {
+        if (channel instanceof GuildChannel guildChannel) {
+            return "https://discord.com/channels/" + guildChannel.getGuild().getIdLong() + "/" + guildChannel.getIdLong();
+        } else {
+            return "https://discord.com/channels/@me/" + channel.getIdLong();
+        }
+    }
+
+    public static MutableText createTryAgain(CommandContext<ServerCommandSource> context) {
+        return new TranslatableText("disfabric.tryagain").setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, context.getInput())));
     }
 }

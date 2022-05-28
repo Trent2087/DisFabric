@@ -23,7 +23,7 @@ public class MinecraftEventListener {
                     if (DisFabric.config.isWebhookEnabled) {
                         JSONObject body = new JSONObject();
                         body.put("username", playerEntity.getEntityName());
-                        body.put("avatar_url", "https://crafatar.com/avatars/" + playerEntity.getUuid() + ".png");
+                        body.put("avatar_url", Utils.playerAvatarUrl(playerEntity));
                         JSONObject allowed_mentions = new JSONObject();
                         allowed_mentions.put("parse", new String[]{"users"});
                         body.put("allowed_mentions", allowed_mentions);
@@ -34,7 +34,7 @@ public class MinecraftEventListener {
                             ex.printStackTrace();
                         }
                     } else {
-                        DisFabric.textChannel.sendMessage(DisFabric.config.texts.playerMessage.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName())).replace("%playermessage%", convertedString)).queue();
+                        DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.playerMessage.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName())).replace("%playermessage%", convertedString)).queue();
                     }
                     // If it returns itself, there was no new mention.
                     // If it doesn't return itself, it's always mutated.
@@ -51,28 +51,28 @@ public class MinecraftEventListener {
             PlayerAdvancementCallback.EVENT.register((playerEntity, advancement) -> {
                 if (DisFabric.config.announceAdvancements && advancement.getDisplay() != null && advancement.getDisplay().shouldAnnounceToChat() && playerEntity.getAdvancementTracker().getProgress(advancement).isDone() && !DisFabric.stop) {
                     switch (advancement.getDisplay().getFrame()) {
-                        case GOAL -> DisFabric.textChannel.sendMessage(DisFabric.config.texts.advancementGoal.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName())).replace("%advancement%", MarkdownSanitizer.escape(advancement.getDisplay().getTitle().getString()))).queue();
-                        case TASK -> DisFabric.textChannel.sendMessage(DisFabric.config.texts.advancementTask.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName())).replace("%advancement%", MarkdownSanitizer.escape(advancement.getDisplay().getTitle().getString()))).queue();
-                        case CHALLENGE -> DisFabric.textChannel.sendMessage(DisFabric.config.texts.advancementChallenge.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName())).replace("%advancement%", MarkdownSanitizer.escape(advancement.getDisplay().getTitle().getString()))).queue();
+                        case GOAL -> DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.advancementGoal.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName())).replace("%advancement%", MarkdownSanitizer.escape(advancement.getDisplay().getTitle().getString()))).queue();
+                        case TASK -> DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.advancementTask.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName())).replace("%advancement%", MarkdownSanitizer.escape(advancement.getDisplay().getTitle().getString()))).queue();
+                        case CHALLENGE -> DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.advancementChallenge.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName())).replace("%advancement%", MarkdownSanitizer.escape(advancement.getDisplay().getTitle().getString()))).queue();
                     }
                 }
             });
 
             PlayerDeathCallback.EVENT.register((playerEntity, damageSource) -> {
                 if (DisFabric.config.announceDeaths && !DisFabric.stop) {
-                    DisFabric.textChannel.sendMessage(DisFabric.config.texts.deathMessage.replace("%deathmessage%", MarkdownSanitizer.escape(damageSource.getDeathMessage(playerEntity).getString())).replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
+                    DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.deathMessage.replace("%deathmessage%", MarkdownSanitizer.escape(damageSource.getDeathMessage(playerEntity).getString())).replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName()))).queue();
                 }
             });
 
             ServerPlayConnectionEvents.JOIN.register((handler, $2, $3) -> {
                 if (DisFabric.config.announcePlayers && !DisFabric.stop) {
-                    DisFabric.textChannel.sendMessage(DisFabric.config.texts.joinServer.replace("%playername%", MarkdownSanitizer.escape(handler.player.getEntityName()))).queue();
+                    DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.joinServer.replace("%playername%", MarkdownSanitizer.escape(handler.player.getEntityName()))).queue();
                 }
             });
 
             ServerPlayConnectionEvents.DISCONNECT.register((handler, $2) -> {
                 if (DisFabric.config.announcePlayers && !DisFabric.stop) {
-                    DisFabric.textChannel.sendMessage(DisFabric.config.texts.leftServer.replace("%playername%", MarkdownSanitizer.escape(handler.player.getEntityName()))).queue();
+                    DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.leftServer.replace("%playername%", MarkdownSanitizer.escape(handler.player.getEntityName()))).queue();
                 }
             });
         }

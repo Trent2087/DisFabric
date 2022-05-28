@@ -1,6 +1,8 @@
 package br.com.brforgers.mods.disfabric;
 
+import br.com.brforgers.mods.disfabric.commands.ReportCommand;
 import br.com.brforgers.mods.disfabric.commands.ShrugCommand;
+import br.com.brforgers.mods.disfabric.commands.SuggestCommand;
 import br.com.brforgers.mods.disfabric.listeners.DiscordEventListener;
 import br.com.brforgers.mods.disfabric.listeners.MinecraftEventListener;
 import kong.unirest.Unirest;
@@ -8,9 +10,8 @@ import me.sargunvohra.mcmods.autoconfig1u.AutoConfig;
 import me.sargunvohra.mcmods.autoconfig1u.serializer.JanksonConfigSerializer;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
@@ -21,10 +22,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import javax.security.auth.login.LoginException;
 import java.util.Collections;
-import java.util.Objects;
 
 public class DisFabric implements DedicatedServerModInitializer {
 
@@ -33,7 +34,9 @@ public class DisFabric implements DedicatedServerModInitializer {
     public static Configuration config;
     public static JDA jda;
     public static Guild guild;
-    public static TextChannel textChannel;
+    public static GuildMessageChannel bridgeChannel;
+    @Nullable
+    public static GuildMessageChannel bugReportChannel, userReportChannel, suggestionChannel;
 
     public static boolean stop = false;
 
@@ -41,7 +44,7 @@ public class DisFabric implements DedicatedServerModInitializer {
     public void onInitializeServer() {
         AutoConfig.register(Configuration.class, JanksonConfigSerializer::new);
         config = AutoConfig.getConfigHolder(Configuration.class).getConfig();
-        if(config.isWebhookEnabled && (config.webhookURL == null || config.webhookURL.isBlank())) {
+        if (config.isWebhookEnabled && (config.webhookURL == null || config.webhookURL.isBlank())) {
             logger.error("Webhook is not set. Falling back to a regular message. Please set a webhook URL in ~/config/disfabric.json5");
             config.isWebhookEnabled = false;
         }
@@ -58,8 +61,11 @@ public class DisFabric implements DedicatedServerModInitializer {
                         .enableIntents(GatewayIntent.GUILD_MEMBERS);
                 DisFabric.jda = builder.build();
                 DisFabric.jda.awaitReady();
-                DisFabric.textChannel = Objects.requireNonNull(DisFabric.jda.getTextChannelById(config.channelId), "No such Text Channel");
-                DisFabric.guild = DisFabric.textChannel.getGuild();
+                DisFabric.bridgeChannel = requireMessageChannel(DisFabric.jda.getGuildChannelById(config.channelId), "No such bridge channel");
+                bugReportChannel = maybeMessageChannel(jda.getGuildChannelById(config.bugReportChannel));
+                userReportChannel = maybeMessageChannel(jda.getGuildChannelById(config.userReportChannel));
+                suggestionChannel = maybeMessageChannel(jda.getGuildChannelById(config.suggestionChannel));
+                DisFabric.guild = DisFabric.bridgeChannel.getGuild();
             }
         } catch (LoginException | InterruptedException ex) {
             jda = null;
@@ -70,13 +76,13 @@ public class DisFabric implements DedicatedServerModInitializer {
                 jda.getPresence().setActivity(Activity.playing(config.botGameStatus));
 
             if (!config.commandsOnly) {
-                ServerLifecycleEvents.SERVER_STARTED.register((server) -> textChannel.sendMessage(DisFabric.config.texts.serverStarted).queue());
+                ServerLifecycleEvents.SERVER_STARTED.register((server) -> bridgeChannel.sendMessage(DisFabric.config.texts.serverStarted).queue());
             }
 
             ServerLifecycleEvents.SERVER_STOPPING.register((server) -> {
                 stop = true;
                 if (!config.commandsOnly) {
-                    textChannel.sendMessage(DisFabric.config.texts.serverStopped).complete();
+                    bridgeChannel.sendMessage(DisFabric.config.texts.serverStopped).complete();
                 }
                 Unirest.shutDown();
                 DisFabric.jda.shutdownNow();
@@ -87,7 +93,30 @@ public class DisFabric implements DedicatedServerModInitializer {
         CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
             if (dedicated) {
                 ShrugCommand.register(dispatcher);
+                if (jda != null) {
+                    ReportCommand.register(dispatcher);
+                    SuggestCommand.register(dispatcher);
+                }
             }
         });
+    }
+
+    public static boolean hasPermission(@Nullable GuildChannel channel, Permission... permissions) {
+        return channel != null && channel.getGuild().getSelfMember().hasPermission(permissions);
+    }
+
+    private static GuildMessageChannel requireMessageChannel(Channel channel, String error) {
+        if (channel instanceof GuildMessageChannel gmc) {
+            return gmc;
+        }
+        throw new IllegalArgumentException(error);
+    }
+
+    @Nullable
+    private static GuildMessageChannel maybeMessageChannel(Channel channel) {
+        if (channel instanceof GuildMessageChannel gmc && gmc.canTalk()) {
+            return gmc;
+        }
+        return null;
     }
 }
