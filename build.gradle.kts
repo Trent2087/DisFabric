@@ -67,6 +67,7 @@ dependencies {
     include(implementation("com.fasterxml.jackson.core", "jackson-annotations", "2.13.3"))
     include(implementation("com.fasterxml.jackson.core", "jackson-core", "2.13.3"))
     include(implementation("com.squareup.okio", "okio", "3.1.0"))
+    include(implementation("com.squareup.okio", "okio-jvm", "3.1.0"))
     include(implementation("com.neovisionaries", "nv-websocket-client", "2.14"))
 }
 
