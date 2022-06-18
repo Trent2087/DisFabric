@@ -1,7 +1,7 @@
 package br.com.brforgers.mods.disfabric;
 
+import br.com.brforgers.mods.disfabric.commands.EmoteCommand;
 import br.com.brforgers.mods.disfabric.commands.ReportCommand;
-import br.com.brforgers.mods.disfabric.commands.ShrugCommand;
 import br.com.brforgers.mods.disfabric.commands.SuggestCommand;
 import br.com.brforgers.mods.disfabric.listeners.DiscordEventListener;
 import br.com.brforgers.mods.disfabric.listeners.MinecraftEventListener;
@@ -16,8 +16,9 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.fabricmc.api.DedicatedServerModInitializer;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.minecraft.server.command.CommandManager;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import org.apache.logging.log4j.LogManager;
@@ -26,10 +27,13 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.security.auth.login.LoginException;
 import java.util.Collections;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class DisFabric implements DedicatedServerModInitializer {
 
     public static final String MOD_ID = "disfabric";
+    public static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     public static Logger logger = LogManager.getLogger(MOD_ID);
     public static Configuration config;
     public static JDA jda;
@@ -90,13 +94,14 @@ public class DisFabric implements DedicatedServerModInitializer {
             new MinecraftEventListener().init();
 
         }
-        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
-            if (dedicated) {
-                ShrugCommand.register(dispatcher);
-                if (jda != null) {
-                    ReportCommand.register(dispatcher);
-                    SuggestCommand.register(dispatcher);
-                }
+        var event = CommandRegistrationCallback.EVENT;
+        event.register(new EmoteCommand("shrug", EmoteCommand.SHRUG));
+        event.register(new EmoteCommand("tableflip", EmoteCommand.TABLE_FLIP));
+        event.register(new EmoteCommand("unflip", EmoteCommand.UNFLIP));
+        event.register((dispatcher, registry, environment) -> {
+            if (environment == CommandManager.RegistrationEnvironment.DEDICATED && jda != null) {
+                ReportCommand.register(dispatcher);
+                SuggestCommand.register(dispatcher);
             }
         });
     }
@@ -105,6 +110,8 @@ public class DisFabric implements DedicatedServerModInitializer {
         return channel != null && channel.getGuild().getSelfMember().hasPermission(permissions);
     }
 
+    // SameParameterValue - This is supposed to be generic; we don't care.
+    @SuppressWarnings("SameParameterValue")
     private static GuildMessageChannel requireMessageChannel(Channel channel, String error) {
         if (channel instanceof GuildMessageChannel gmc) {
             return gmc;

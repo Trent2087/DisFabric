@@ -8,17 +8,15 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.network.MessageType;
+import net.minecraft.network.message.MessageType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.ClickEvent;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
@@ -36,13 +34,13 @@ public class DiscordEventListener extends ListenerAdapter {
 
     public void onMessageReceived(@NotNull MessageReceivedEvent e) {
         MinecraftServer server = getServer();
-        if(e.getAuthor() != e.getJDA().getSelfUser() && !e.getAuthor().isBot() && e.getChannel().getId().equals(DisFabric.config.channelId) && server != null) {
+        if (server != null && !e.getAuthor().isBot() && e.getChannel().getId().equals(DisFabric.config.channelId)) {
             String raw = e.getMessage().getContentRaw();
-            if(raw.startsWith("!")) {
+            if (raw.startsWith("!")) {
                 int space = raw.indexOf(' ', 1);
                 switch (space == -1 ? raw.substring(1) : raw.substring(1, space)) {
                     case "console" -> {
-                        if(!Arrays.asList(DisFabric.config.adminsIds).contains(e.getAuthor().getId())) return;
+                        if (!Arrays.asList(DisFabric.config.adminsIds).contains(e.getAuthor().getId())) return;
                         String command = raw.substring(space + 1);
                         server.execute(() -> server.getCommandManager().execute(getDiscordCommandSource(e), command));
                     }
@@ -71,7 +69,8 @@ public class DiscordEventListener extends ListenerAdapter {
                     }
                     case "online" -> {
                         List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
-                        StringBuilder playerList = new StringBuilder("```ansi\n=============== \u001B[32;1mOnline Players\u001B[0m (\u001B[34m" + onlinePlayers.size() + "\u001B[0m) ===============\n");
+                        StringBuilder playerList = new StringBuilder("```ansi\n=============== \u001B[32;1mOnline Players\u001B[0m (\u001B[34m")
+                                .append(onlinePlayers.size()).append("\u001B[0m) ===============\n");
                         for (ServerPlayerEntity player : onlinePlayers) {
                             playerList.append("\n - \u001B[36m").append(player.getEntityName()).append("\u001B[0m");
                         }
@@ -101,16 +100,21 @@ public class DiscordEventListener extends ListenerAdapter {
             } else if (!DisFabric.config.commandsOnly) {
                 var username = Utils.convertMemberToFormattedText(e.getAuthor(), e.getMember(), "");
 
+                /*/ New potential method for consistency with in-game chat?
+                var message = raw.isBlank() ? Text.empty() :
+                        server.getMessageDecorator().decorate(null, Text.of(raw)).join().copy();
+                /*/
                 var styledMessage = TextStyler.INSTANCE.apply(raw);
 
-                var message = styledMessage == null ? new LiteralText("") : styledMessage.shallowCopy();
+                var message = styledMessage == null ? Text.empty() : styledMessage.copy();
+                /**/
 
                 for (var attachment : e.getMessage().getAttachments()) {
                     var style = LINK.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, attachment.getUrl()));
-                    message.append(" <").append(new LiteralText(attachment.getFileName()).fillStyle(style)).append(">");
+                    message.append(" <").append(Text.literal(attachment.getFileName()).fillStyle(style)).append(">");
                 }
 
-                server.getPlayerManager().broadcast(new TranslatableText("chat.type.text", username, message), MessageType.CHAT, Util.NIL_UUID);
+                server.getPlayerManager().broadcast(Utils.createFakeChatMessage(username, message), MessageType.SYSTEM);
             }
         }
     }
@@ -121,7 +125,7 @@ public class DiscordEventListener extends ListenerAdapter {
         User author = e.getAuthor();
         String username = author.getName() + '#' + author.getDiscriminator();
 
-        return new ServerCommandSource(new DiscordCommandOutput(), serverWorld == null ? Vec3d.ZERO : Vec3d.of(serverWorld.getSpawnPos()), Vec2f.ZERO, serverWorld, 4, username, new LiteralText(username), getServer(), null);
+        return new ServerCommandSource(new DiscordCommandOutput(), serverWorld == null ? Vec3d.ZERO : Vec3d.of(serverWorld.getSpawnPos()), Vec2f.ZERO, serverWorld, 4, username, Text.of(username), getServer(), null);
     }
 
     private MinecraftServer getServer(){

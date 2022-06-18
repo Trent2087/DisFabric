@@ -6,7 +6,6 @@ import net.minecraft.text.Text;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 
 public class DiscordCommandOutput implements CommandOutput {
 
@@ -15,16 +14,16 @@ public class DiscordCommandOutput implements CommandOutput {
     long lastOutputMillis = 0;
 
     @Override
-    public void sendSystemMessage(Text message, UUID senderUuid) {
+    public void sendMessage(Text message) {
         String messageString = message.getString();
         DisFabric.logger.info(messageString);
         long currentOutputMillis = System.currentTimeMillis();
-        if((outputString.length() + messageString.length()) > 2000) {
+        if ((outputString.length() + messageString.length()) > 2000) {
             DisFabric.bridgeChannel.sendMessage(outputString).queue();
-        }else{
+        } else {
             outputString.append("> ").append(messageString).append("\n");
         }
-        if((currentOutputMillis - lastOutputMillis) > 50) {
+        if ((currentOutputMillis - lastOutputMillis) > 50) {
             outputThread = new Thread(() -> new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {

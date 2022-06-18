@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 /**
  * @author KJP12
- * @since ${version}
+ * @since 1.3.5
  **/
 public class DiscordChatExtension implements Parser.ParserExtension {
     public static final Extension INSTANCE = new DiscordChatExtension();

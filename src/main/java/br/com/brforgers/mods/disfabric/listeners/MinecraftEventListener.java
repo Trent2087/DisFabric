@@ -5,19 +5,26 @@ import br.com.brforgers.mods.disfabric.events.PlayerAdvancementCallback;
 import br.com.brforgers.mods.disfabric.events.PlayerDeathCallback;
 import br.com.brforgers.mods.disfabric.events.ServerChatCallback;
 import br.com.brforgers.mods.disfabric.utils.Utils;
-import dev.gegy.mdchat.TextStyler;
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONObject;
 import net.dv8tion.jda.api.utils.MarkdownSanitizer;
+import net.fabricmc.fabric.api.event.Event;
+import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 
-import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public class MinecraftEventListener {
+    private static final Identifier DISFABRIC_CHAT = Identifier.of("disfabric", "decorator");
+
     public void init() {
         if (!DisFabric.config.commandsOnly) {
-            ServerChatCallback.EVENT.register((playerEntity, rawMessage, message) -> {
+            ServerMessageDecoratorEvent.EVENT.addPhaseOrdering(DISFABRIC_CHAT, Event.DEFAULT_PHASE);
+            ServerMessageDecoratorEvent.EVENT.register(DISFABRIC_CHAT, (sender, message) ->
+                    CompletableFuture.completedFuture(DisFabric.stop ? message : Text.of(Utils.convertMentionsFromNames(message.getString()))));
+            ServerChatCallback.EVENT.register((playerEntity, rawMessage) -> {
                 if (!DisFabric.stop) {
                     String convertedString = Utils.convertMentionsFromNames(rawMessage);
                     if (DisFabric.config.isWebhookEnabled) {
@@ -36,16 +43,7 @@ public class MinecraftEventListener {
                     } else {
                         DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.playerMessage.replace("%playername%", MarkdownSanitizer.escape(playerEntity.getEntityName())).replace("%playermessage%", convertedString)).queue();
                     }
-                    // If it returns itself, there was no new mention.
-                    // If it doesn't return itself, it's always mutated.
-                    // So: why bother doing .equals when it's either it'll either waste cycles or short circuits.
-                    //noinspection StringEquality
-                    if (DisFabric.config.modifyChatMessages && rawMessage != convertedString && message instanceof TranslatableText translatableText) {
-                        translatableText.getArgs()[1] = TextStyler.INSTANCE.apply(convertedString);
-                        return Optional.of(translatableText);
-                    }
                 }
-                return Optional.empty();
             });
 
             PlayerAdvancementCallback.EVENT.register((playerEntity, advancement) -> {

@@ -15,12 +15,29 @@ public class Utils {
             userMention = Pattern.compile("@([^@#:\\s][^@#:]{0,30}[^@#:\\s])(?:#(\\d{4}))?");
 
     /**
+     * Provides a face avatar for use with webhooks and embeds,
+     * should the source be a player.
+     */
+    public static String playerAvatarUrl(ServerCommandSource source) {
+        PlayerEntity player = source.getPlayer();
+        if (player != null) {
+            return playerAvatarUrl(player);
+        }
+        return null;
+    }
+
+    /**
      * Provides a face avatar for use with webhooks and embeds.
      */
     public static String playerAvatarUrl(PlayerEntity player) {
         return "https://crafatar.com/avatars/" + player.getUuid() + ".png";
     }
 
+    // FIXME: Ignore content in codeblocks (wrapped in `, `` and ```)
+    // FIXME: Make more efficient caching logic for mentions.
+    //  Ideally, the lookup is constant time with linear search by hash of
+    //  username, decrementing for fuzziness; O(n), rather than linear search
+    //  on top of a linear search; O(n^2)
     public static String convertMentionsFromNames(String message) {
 
         if (!message.contains("@")) return message;
@@ -98,6 +115,30 @@ public class Utils {
     }
 
     /**
+     * Produces a fake chat message applicable for sending as a
+     * {@link net.minecraft.network.message.MessageType#SYSTEM system message}.
+     *
+     * @param source The player to make the fake message for.
+     * @param text   The fake message's contents.
+     * @return A fake chat message.
+     */
+    public static Text createFakeChatMessage(ServerCommandSource source, Text text) {
+        return createFakeChatMessage(source.getDisplayName(), text);
+    }
+
+    /**
+     * Produces a fake chat message applicable for sending as a
+     * {@link net.minecraft.network.message.MessageType#SYSTEM system message}.
+     *
+     * @param username The username to make the fake message for.
+     * @param text     The fake message's contents.
+     * @return A fake chat message.
+     */
+    public static Text createFakeChatMessage(Text username, Text text) {
+        return Text.translatable("chat.type.text", username, text);
+    }
+
+    /**
      * Produces a dummy string in the event of unknown entity.
      *
      * @param id   The ID of the unknown entity.
@@ -106,9 +147,9 @@ public class Utils {
      * @return The text stylised to the required spec.
      */
     public static MutableText convertUnknownEntityToFormattedText(long id, String type, String text) {
-        var username = new LiteralText(text);
+        var username = Text.literal(text);
         var memberStyle = username.getStyle();
-        memberStyle = memberStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText("Discord " + type + '\n' + id)));
+        memberStyle = memberStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Discord " + type + '\n' + id)));
         memberStyle = memberStyle.withColor(0x7289DA);
         username.setStyle(memberStyle);
         return username;
@@ -123,9 +164,9 @@ public class Utils {
      * @return The username formatted with a hover & click event.
      */
     public static MutableText convertMemberToFormattedText(User user, Member member, String prepend) {
-        var username = new LiteralText(prepend + (member == null ? user.getName() : member.getEffectiveName()));
+        var username = Text.literal(prepend + (member == null ? user.getName() : member.getEffectiveName()));
         var memberStyle = username.getStyle();
-        memberStyle = memberStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText("Discord: " + user.getAsTag() + '\n' + user.getIdLong())));
+        memberStyle = memberStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Discord: " + user.getAsTag() + '\n' + user.getIdLong())));
         memberStyle = memberStyle.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, '@' + user.getAsTag()));
         int color = member == null ? -1 : member.getColorRaw();
         memberStyle = memberStyle.withColor(color == -1 ? 0x7289DA : color);
@@ -141,9 +182,9 @@ public class Utils {
      * @return The role formatted with a hover & click event.
      */
     public static MutableText convertRoleToFormattedText(Role role, String prepend) {
-        var username = new LiteralText(prepend + role.getName());
+        var username = Text.literal(prepend + role.getName());
         var memberStyle = username.getStyle();
-        memberStyle = memberStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText("Discord Role\n" + role.getIdLong())));
+        memberStyle = memberStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Discord Role\n" + role.getIdLong())));
         memberStyle = memberStyle.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, '@' + role.getName()));
         int color = role.getColorRaw();
         memberStyle = memberStyle.withColor(color == -1 ? 0x7289DA : color);
@@ -159,9 +200,9 @@ public class Utils {
      * @return The channel formatted with a hover & click event.
      */
     public static MutableText convertChannelToFormattedText(Channel channel, String prepend) {
-        var username = new LiteralText(prepend + channel.getName());
+        var username = Text.literal(prepend + channel.getName());
         var memberStyle = username.getStyle();
-        memberStyle = memberStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText("Discord Channel\n" + channel.getIdLong())));
+        memberStyle = memberStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Discord Channel\n" + channel.getIdLong())));
         memberStyle = memberStyle.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, '#' + channel.getName()));
         memberStyle = memberStyle.withColor(0x7289DA);
         username.setStyle(memberStyle);
@@ -176,9 +217,9 @@ public class Utils {
      * @return The channel formatted with a hover & click event.
      */
     public static MutableText convertChannelToFormattedLink(GuildMessageChannel channel, String prepend) {
-        var channelName = new LiteralText(prepend + channel.getName());
+        var channelName = Text.literal(prepend + channel.getName());
         var channelStyle = channelName.getStyle();
-        channelStyle = channelStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText("Discord Channel\n" + channel.getIdLong())));
+        channelStyle = channelStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Discord Channel\n" + channel.getIdLong())));
         channelStyle = channelStyle.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, convertChannelToLink(channel)));
         channelStyle = channelStyle.withColor(0x7289DA);
         channelName.setStyle(channelStyle);
@@ -194,9 +235,9 @@ public class Utils {
      */
     public static MutableText convertMessageToFormattedLink(Message message, String prepend) {
         var channel = message.getChannel();
-        var channelName = new LiteralText(prepend + channel.getName());
+        var channelName = Text.literal(prepend + channel.getName());
         var channelStyle = channelName.getStyle();
-        channelStyle = channelStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText("Discord Channel\n" + channel.getIdLong())));
+        channelStyle = channelStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Discord Channel\n" + channel.getIdLong())));
         channelStyle = channelStyle.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, message.getJumpUrl()));
         channelStyle = channelStyle.withColor(0x7289DA);
         channelName.setStyle(channelStyle);
@@ -218,6 +259,6 @@ public class Utils {
     }
 
     public static MutableText createTryAgain(CommandContext<ServerCommandSource> context) {
-        return new TranslatableText("disfabric.tryagain").setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, context.getInput())));
+        return Text.translatable("disfabric.tryagain").setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, context.getInput())));
     }
 }

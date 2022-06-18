@@ -7,7 +7,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 import static com.mojang.brigadier.arguments.StringArgumentType.greedyString;
@@ -16,7 +16,7 @@ import static net.minecraft.server.command.CommandManager.literal;
 
 /**
  * @author KJP12
- * @since ${version}
+ * @since 1.3.5
  **/
 public class SuggestCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
@@ -26,7 +26,9 @@ public class SuggestCommand {
                     .requires(src -> src.getEntity() instanceof ServerPlayerEntity)
                     .then(argument("description", greedyString()).executes(ctx -> {
                         var source = ctx.getSource();
-                        var reporter = source.getPlayer();
+                        // We've already checked via `.requires` that this will guarantee a
+                        // ServerPlayerEntity being present.
+                        var reporter = source.getPlayerOrThrow();
                         var description = getString(ctx, "description");
                         var embed = new EmbedBuilder()
                                 .setDescription(description)
@@ -34,10 +36,10 @@ public class SuggestCommand {
                                 .setFooter(reporter.getUuidAsString())
                                 .build();
                         suggestionChannel.sendMessageEmbeds(embed).queue(
-                                msg -> source.sendFeedback(new TranslatableText("disfabric.suggest.success", Utils.convertMessageToFormattedLink(msg, "#")), false),
+                                msg -> source.sendFeedback(Text.translatable("disfabric.suggest.success", Utils.convertMessageToFormattedLink(msg, "#")), false),
                                 err -> {
                                     DisFabric.logger.error("Failed to process suggestion {} by {}:", description, reporter, err);
-                                    source.sendError(new TranslatableText("disfabric.suggest.failure", err.getMessage(), Utils.createTryAgain(ctx)));
+                                    source.sendError(Text.translatable("disfabric.suggest.failure", err.getMessage(), Utils.createTryAgain(ctx)));
                                 }
                         );
                         return Command.SINGLE_SUCCESS;

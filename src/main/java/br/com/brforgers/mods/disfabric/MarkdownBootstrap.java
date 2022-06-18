@@ -5,31 +5,27 @@ import br.com.brforgers.mods.disfabric.markdown.EmoteNode;
 import br.com.brforgers.mods.disfabric.markdown.MentionNode;
 import br.com.brforgers.mods.disfabric.markdown.TimeNode;
 import br.com.brforgers.mods.disfabric.utils.Utils;
-import dev.gegy.mdchat.NodeStyler;
 import dev.gegy.mdchat.StylerBootstrap;
+import dev.gegy.mdchat.TextStyler;
 import net.dv8tion.jda.api.entities.Channel;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
-import net.fabricmc.fabric.api.event.Event;
-import org.commonmark.parser.Parser;
-
-import java.util.Collections;
 
 /**
  * @author KJP12
- * @since ${version}
+ * @since 1.3.5
  **/
 public class MarkdownBootstrap implements StylerBootstrap {
     @Override
-    public void bootstrap(Parser.Builder parser, Event<NodeStyler> styler) {
-        parser.extensions(Collections.singleton(DiscordChatExtension.INSTANCE));
-        styler.register((node, child) -> {
+    public void bootstrap(TextStyler.Builder builder) {
+        builder.addExtension(DiscordChatExtension.INSTANCE);
+        builder.addNodeStyler((node, child) -> {
             if (node instanceof EmoteNode emote) {
                 return Utils.convertUnknownEntityToFormattedText(emote.id, "emote", ":" + emote.name + ":");
             } else if (node instanceof MentionNode mention) {
                 if (DisFabric.jda == null) {
                     // We cannot do much without JDA, so, just return default.
-                    return child.get();
+                    return child;
                 }
                 switch (mention.type) {
                     case USER -> {

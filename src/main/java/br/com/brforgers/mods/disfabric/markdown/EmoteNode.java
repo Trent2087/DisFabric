@@ -4,7 +4,7 @@ import org.commonmark.node.CustomNode;
 
 /**
  * @author KJP12
- * @since ${version}
+ * @since 1.3.5
  **/
 public class EmoteNode extends CustomNode {
     public final boolean animated;

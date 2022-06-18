@@ -7,7 +7,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 import static com.mojang.brigadier.arguments.StringArgumentType.greedyString;
@@ -21,7 +21,7 @@ import static net.minecraft.server.command.CommandManager.literal;
  * {@code /report player &lt;player&gt; &lt;description&gt;}
  *
  * @author KJP12
- * @since ${version}
+ * @since 1.3.5
  **/
 public class ReportCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
@@ -34,7 +34,8 @@ public class ReportCommand {
             var bug = literal("bug")
                     .then(argument("description", greedyString()).executes(ctx -> {
                         var source = ctx.getSource();
-                        var reporter = source.getPlayer();
+                        // We've already checked via requires.
+                        var reporter = source.getPlayerOrThrow();
                         var description = getString(ctx, "description");
                         var embed = new EmbedBuilder().setDescription(description)
                                 .setAuthor(reporter.getEntityName(), null, Utils.playerAvatarUrl(reporter))
@@ -43,16 +44,16 @@ public class ReportCommand {
                         bugReportChannel.sendMessageEmbeds(embed).queue(
                                 DisFabric.config.bugReportAutoThread ?
                                         msg -> msg.createThreadChannel(description.length() < 32 ? description : description.substring(0, 32)).queue(
-                                                thread -> source.sendFeedback(new TranslatableText("disfabric.report.bug.success", Utils.convertChannelToFormattedLink(thread, "#")), false),
+                                                thread -> source.sendFeedback(Text.translatable("disfabric.report.bug.success", Utils.convertChannelToFormattedLink(thread, "#")), false),
                                                 err -> {
                                                     DisFabric.logger.warn("Failed to create thread for {}:", msg, err);
                                                     // We still have a message, so, technically still successful regardless of if the thread failed to be created.
-                                                    source.sendFeedback(new TranslatableText("disfabric.report.bug.success", Utils.convertMessageToFormattedLink(msg, "#")), false);
+                                                    source.sendFeedback(Text.translatable("disfabric.report.bug.success", Utils.convertMessageToFormattedLink(msg, "#")), false);
                                                 }) :
-                                        msg -> source.sendFeedback(new TranslatableText("disfabric.report.bug.success", Utils.convertMessageToFormattedLink(msg, "#")), false),
+                                        msg -> source.sendFeedback(Text.translatable("disfabric.report.bug.success", Utils.convertMessageToFormattedLink(msg, "#")), false),
                                 err -> {
                                     DisFabric.logger.error("Failed to report bug {} by {}:", description, reporter, err);
-                                    source.sendError(new TranslatableText("disfabric.report.bug.failure", err.getMessage(), Utils.createTryAgain(ctx)));
+                                    source.sendError(Text.translatable("disfabric.report.bug.failure", err.getMessage(), Utils.createTryAgain(ctx)));
                                 });
                         return Command.SINGLE_SUCCESS;
                     }));
@@ -65,7 +66,8 @@ public class ReportCommand {
             var player = literal("player").then(argument("target", player())
                     .then(argument("description", greedyString()).executes(ctx -> {
                         var source = ctx.getSource();
-                        var reporter = source.getPlayer();
+                        // We've already checked via requires.
+                        var reporter = source.getPlayerOrThrow();
                         var reported = getPlayer(ctx, "target");
                         var description = getString(ctx, "description");
                         var embed = new EmbedBuilder().setDescription(description)
@@ -79,10 +81,10 @@ public class ReportCommand {
                         }
                         messageAction.queue(
                                 // Note: broadcastToOps = true is intentional for this.
-                                msg -> source.sendFeedback(new TranslatableText("disfabric.report.user.success", reported.getDisplayName()), true),
+                                msg -> source.sendFeedback(Text.translatable("disfabric.report.user.success", reported.getDisplayName()), true),
                                 err -> {
                                     DisFabric.logger.error("Failed to report player {}: {} by {}: ", reported, description, reporter, err);
-                                    source.sendError(new TranslatableText("disfabric.report.user.failure", reported.getDisplayName(), err.getMessage(), Utils.createTryAgain(ctx)));
+                                    source.sendError(Text.translatable("disfabric.report.user.failure", reported.getDisplayName(), err.getMessage(), Utils.createTryAgain(ctx)));
                                 }
                         );
                         return Command.SINGLE_SUCCESS;
