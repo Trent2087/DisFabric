@@ -34,7 +34,7 @@ public class DisFabric implements DedicatedServerModInitializer {
 
     public static final String MOD_ID = "disfabric";
     public static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    public static Logger logger = LogManager.getLogger(MOD_ID);
+    public static final Logger logger = LogManager.getLogger(MOD_ID);
     public static Configuration config;
     public static JDA jda;
     public static Guild guild;

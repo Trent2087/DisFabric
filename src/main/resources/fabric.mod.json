@@ -35,5 +35,11 @@
     "markdown_chat": "*",
     "minecraft": "1.19.x",
     "java": ">=17"
+  },
+  "recommends": {
+    "server_translations_api": "<=1.4.14+1.19-rc2"
+  },
+  "breaks": {
+    "server_translations_api": "1.4.15+1.19||1.4.16+1.19"
   }
 }

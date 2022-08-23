@@ -3,13 +3,17 @@ package br.com.brforgers.mods.disfabric.listeners;
 import br.com.brforgers.mods.disfabric.DisFabric;
 import br.com.brforgers.mods.disfabric.utils.DiscordCommandOutput;
 import br.com.brforgers.mods.disfabric.utils.Utils;
+import com.mojang.authlib.Agent;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.ProfileLookupCallback;
 import dev.gegy.mdchat.TextStyler;
+import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.network.message.MessageType;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.WhitelistEntry;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -22,9 +26,6 @@ import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -34,7 +35,8 @@ public class DiscordEventListener extends ListenerAdapter {
 
     public void onMessageReceived(@NotNull MessageReceivedEvent e) {
         MinecraftServer server = getServer();
-        if (server != null && !e.getAuthor().isBot() && e.getChannel().getId().equals(DisFabric.config.channelId)) {
+        MessageChannel channel = e.getChannel();
+        if (server != null && !e.getAuthor().isBot() && channel.getId().equals(DisFabric.config.channelId)) {
             String raw = e.getMessage().getContentRaw();
             if (raw.startsWith("!")) {
                 int space = raw.indexOf(' ', 1);
@@ -42,30 +44,58 @@ public class DiscordEventListener extends ListenerAdapter {
                     case "console" -> {
                         if (!Arrays.asList(DisFabric.config.adminsIds).contains(e.getAuthor().getId())) return;
                         String command = raw.substring(space + 1);
-                        server.execute(() -> server.getCommandManager().execute(getDiscordCommandSource(e), command));
+                        server.execute(() -> server.getCommandManager().executeWithPrefix(getDiscordCommandSource(e), command));
                     }
                     case "whitelist" -> {
-                        String username = raw.substring(space + 1);
-                        String command = "whitelist add " + username;
+                        String username = raw.substring(space + 1).strip();
 
-                        try {
-                            URL url = new URL("https://api.mojang.com/users/profiles/minecraft/" + username);
-                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                            connection.setRequestMethod("GET");
-                            if (connection.getResponseCode() / 100 != 2) {
-                                e.getChannel().sendMessage("Invalid username.").queue();
-                                return;
-                            }
-                        } catch (IOException ex) {
-                            ex.printStackTrace();
+                        if (username.isBlank()) {
+                            channel.sendMessage("Enter a username").queue();
+                            return;
+                        } else if (username.indexOf(' ') >= 0) {
+                            channel.sendMessage("Invalid username").queue();
+                            return;
                         }
 
-                        e.getChannel().sendMessage(e.getAuthor().getAsMention() + " ➠ `" + command + '`').queue();
-                        server.execute(() -> server.getCommandManager().execute(getDiscordCommandSource(e), command));
+                        GameProfile profile;
+                        var lookupCallback = new ProfileLookupCallback() {
+                            GameProfile profile;
+
+                            @Override
+                            public void onProfileLookupSucceeded(final GameProfile profile) {
+                                this.profile = profile;
+                            }
+
+                            @Override
+                            public void onProfileLookupFailed(final GameProfile profile, final Exception exception) {
+
+                            }
+                        };
+                        server.getGameProfileRepo().findProfilesByNames(new String[]{username}, Agent.MINECRAFT, lookupCallback);
+
+                        profile = lookupCallback.profile;
+
+                        if (profile == null) {
+                            channel.sendMessage("Invalid username.").queue();
+                            return;
+                        }
+
+                        server.execute(() -> {
+                            var playerManager = server.getPlayerManager();
+                            var whitelist = playerManager.getWhitelist();
+                            var entry = new WhitelistEntry(profile);
+
+                            if (whitelist.isAllowed(profile)) {
+                                channel.sendMessage("`" + profile.getName() + "` already whitelisted.").queue();
+                            } else {
+                                whitelist.add(entry);
+                                channel.sendMessage(e.getAuthor().getAsMention() + " ➠ Whitelisted `" + profile.getName() + '`').queue();
+                            }
+                        });
                     }
                     case "spawn" -> {
                         ServerWorld serverWorld = Objects.requireNonNull(getServer()).getOverworld();
-                        e.getChannel().sendMessage("Spawn location: " + Vec3d.of(serverWorld.getSpawnPos())).queue();
+                        channel.sendMessage("Spawn location: " + Vec3d.of(serverWorld.getSpawnPos())).queue();
                     }
                     case "online" -> {
                         List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
@@ -75,15 +105,15 @@ public class DiscordEventListener extends ListenerAdapter {
                             playerList.append("\n - \u001B[36m").append(player.getEntityName()).append("\u001B[0m");
                         }
                         playerList.append("```");
-                        e.getChannel().sendMessage(playerList.toString()).queue();
+                        channel.sendMessage(playerList.toString()).queue();
                     }
                     case "tps" -> {
                         StringBuilder tps = new StringBuilder("Server TPS: ");
                         double serverTickTime = MathHelper.average(server.lastTickLengths) * 1.0E-6D;
                         tps.append(Math.min(1000.0 / serverTickTime, 20));
-                        e.getChannel().sendMessage(tps.toString()).queue();
+                        channel.sendMessage(tps.toString()).queue();
                     }
-                    case "help" -> e.getChannel().sendMessage("""
+                    case "help" -> channel.sendMessage("""
                             ```ansi
                             =============== \u001B[32;1mCommands\u001B[0m ===============
                                                     
@@ -95,7 +125,7 @@ public class DiscordEventListener extends ListenerAdapter {
                             !\u001B[33mspawn\u001B[0m: shows the location of spawn
                             !\u001B[33mconsole\u001B[0m <\u001B[30mcommand\u001B[0m>: executes commands in the server console (admins only)
                             ```""").queue();
-                    default -> e.getChannel().sendMessage("Unknown command. Run `!help` for available commands.").queue();
+                    default -> channel.sendMessage("Unknown command. Run `!help` for available commands.").queue();
                 }
             } else if (!DisFabric.config.commandsOnly) {
                 var username = Utils.convertMemberToFormattedText(e.getAuthor(), e.getMember(), "");
@@ -114,7 +144,7 @@ public class DiscordEventListener extends ListenerAdapter {
                     message.append(" <").append(Text.literal(attachment.getFileName()).fillStyle(style)).append(">");
                 }
 
-                server.getPlayerManager().broadcast(Utils.createFakeChatMessage(username, message), MessageType.SYSTEM);
+                server.getPlayerManager().broadcast(Utils.createFakeChatMessage(username, message), false);
             }
         }
     }

@@ -78,15 +78,17 @@ public class EmoteCommand implements MessageDecorator, CommandRegistrationCallba
             var signedMessage = MessageArgumentType.getSignedMessage(context, "message");
             var source = context.getSource();
             var playerManager = source.getServer().getPlayerManager();
-            ((CustomisedSignedMessage) (Object) signedMessage).disfabric$decorate(source, ((DecoratorContainer) message).disfabric$asDecorator(source.getServer())).thenAcceptAsync(decorated -> playerManager.broadcast(decorated, source, MessageType.CHAT), source.getServer());
+            ((CustomisedSignedMessage) (Object) signedMessage).disfabric$decorate(source,
+                    decorated -> playerManager.broadcast(decorated, source, MessageType.params(MessageType.CHAT, source)),
+                    ((DecoratorContainer) message).disfabric$asDecorator(source.getServer()));
             var player = source.getPlayer();
             if (player != null) {
-                ServerChatCallback.EVENT.invoker().onServerChat(player, signedMessage.plain() + ' ' + EMOTE);
+                ServerChatCallback.EVENT.invoker().onServerChat(player, signedMessage.signedArgument().getSignedContent().plain() + ' ' + EMOTE);
             }
             return Command.SINGLE_SUCCESS;
         })).executes(context -> {
             var source = context.getSource();
-            source.getServer().getPlayerManager().broadcast(Utils.createFakeChatMessage(source, Text.of(EMOTE)), MessageType.SYSTEM);
+            source.getServer().getPlayerManager().broadcast(Utils.createFakeChatMessage(source, Text.of(EMOTE)), false);
             var player = source.getPlayer();
             if (player != null) {
                 ServerChatCallback.EVENT.invoker().onServerChat(player, EMOTE);

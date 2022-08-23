@@ -1,5 +1,5 @@
 plugins {
-    id("fabric-loom") version "0.12.38"
+    id("fabric-loom") version "0.12.+"
     id("maven-publish")
     id("project-report")
 }
@@ -43,11 +43,11 @@ dependencies {
         exclude(module = "fabric-gametest-api-v1")
     }
     modImplementation("dev.gegy:markdown-chat:1.3.0", excludeFabricApi)
-    modImplementation("fr.catcore:server-translations-api:1.4.14+1.19-rc2", excludeFabricApi)
+    include(modImplementation("fr.catcore:server-translations-api:1.4.14+1.19-rc2", excludeFabricApi))
 
-    modRuntimeOnly("net.fabricmc:fabric-language-kotlin:1.8.0+kotlin.1.7.0")
+    modRuntimeOnly("net.fabricmc:fabric-language-kotlin:1.8.2+kotlin.1.7.10")
 
-    include(implementation("net.dv8tion:JDA:5.0.0-alpha.12") {
+    include(implementation("net.dv8tion:JDA:5.0.0-alpha.18") {
         exclude(module = "opus-java")
     })
 
@@ -63,11 +63,11 @@ dependencies {
     include(implementation("net.sf.trove4j", "trove4j", "3.0.3"))
     include(implementation("org.apache.commons", "commons-collections4", "4.4"))
     include(implementation("com.neovisionaries", "nv-websocket-client", "2.14"))
-    include(implementation("com.squareup.okhttp3", "okhttp", "4.9.3"))
+    include(implementation("com.squareup.okhttp3", "okhttp", "4.10.0"))
     include(implementation("com.fasterxml.jackson.core", "jackson-annotations", "2.13.3"))
     include(implementation("com.fasterxml.jackson.core", "jackson-core", "2.13.3"))
-    include(implementation("com.squareup.okio", "okio", "3.1.0"))
-    include(implementation("com.squareup.okio", "okio-jvm", "3.1.0"))
+    include(implementation("com.squareup.okio", "okio", "3.2.0"))
+    include(implementation("com.squareup.okio", "okio-jvm", "3.2.0"))
     include(implementation("com.neovisionaries", "nv-websocket-client", "2.14"))
 }
 

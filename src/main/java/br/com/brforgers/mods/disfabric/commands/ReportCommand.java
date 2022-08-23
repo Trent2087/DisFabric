@@ -77,7 +77,7 @@ public class ReportCommand {
                         var messageAction = userReportChannel.sendMessageEmbeds(embed);
                         var staff = DisFabric.config.userReportStaffRole;
                         if (staff != 0L) {
-                            messageAction.append("<@&").append(Long.toUnsignedString(staff)).append(">");
+                            messageAction.addContent("<@&").addContent(Long.toUnsignedString(staff)).addContent(">");
                         }
                         messageAction.queue(
                                 // Note: broadcastToOps = true is intentional for this.
