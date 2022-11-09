@@ -28,6 +28,7 @@ repositories {
     maven("https://maven.the-glitch.network") { name = "The Glitch" }
     maven("https://maven.nucleoid.xyz") { name = "NucleoidMC" }
     maven("https://maven.shedaniel.me/")
+    maven("https://maven-nucleoid.pb4.eu/") { name = "NucleoidMC Fallback" }
 }
 
 dependencies {
