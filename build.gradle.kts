@@ -1,5 +1,5 @@
 plugins {
-    id("fabric-loom") version "0.12.+"
+    id("fabric-loom") version "1.1.+"
     id("maven-publish")
     id("project-report")
 }
@@ -55,8 +55,12 @@ dependencies {
     modImplementation("net.fabricmc.fabric-api", "fabric-api", fabric_version) {
         exclude(module = "fabric-gametest-api-v1")
     }
+    // Markdown
+    implementation("org.commonmark:commonmark:0.18.1")
     modImplementation("dev.gegy:markdown-chat:1.3.0", excludeFabricApi)
-    modImplementation("com.github.samolego.Config2Brigadier:config2brigadier-fabric:1.2.1", excludeFabricApi)
+
+    // Fabric Tailor
+    modImplementation("com.github.samolego.Config2Brigadier:config2brigadier-fabric:1.2.3", excludeFabricApi)
     modImplementation("maven.modrinth:fabrictailor:2.0.1")
     modRuntimeOnly("maven.modrinth:drogtor:1.1.3+1.19")
     include(modImplementation("fr.catcore:server-translations-api:1.4.14+1.19-rc2", excludeFabricApi))
