@@ -3,9 +3,11 @@ package br.com.brforgers.mods.disfabric.utils;
 import br.com.brforgers.mods.disfabric.DisFabric;
 import com.mojang.brigadier.context.CommandContext;
 import net.dv8tion.jda.api.entities.*;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.*;
+import org.samo_lego.fabrictailor.casts.TailoredPlayer;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,6 +15,8 @@ import java.util.regex.Pattern;
 public class Utils {
     private static final Pattern
             userMention = Pattern.compile("@([^@#:\\s][^@#:]{0,30}[^@#:\\s])(?:#(\\d{4}))?");
+
+    private static final boolean fabricTailorAvailable = FabricLoader.getInstance().isModLoaded("fabrictailor");
 
     /**
      * Provides a face avatar for use with webhooks and embeds,
@@ -30,7 +34,10 @@ public class Utils {
      * Provides a face avatar for use with webhooks and embeds.
      */
     public static String playerAvatarUrl(PlayerEntity player) {
-        return "https://crafatar.com/avatars/" + player.getUuid() + ".png";
+        if (fabricTailorAvailable && player instanceof TailoredPlayer tailor) {
+            return "https://mc-heads.net/avatar/" + tailor.getSkinId() + "/128";
+        }
+        return "https://mc-heads.net/avatar/" + player.getUuid() + "/128";
     }
 
     // FIXME: Ignore content in codeblocks (wrapped in `, `` and ```)

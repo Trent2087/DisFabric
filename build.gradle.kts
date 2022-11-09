@@ -23,12 +23,24 @@ version = mod_version
 group = maven_group
 
 repositories {
+    maven("https://api.modrinth.com/maven") {
+        name = "Modrinth"
+        mavenContent {
+            includeGroup("maven.modrinth")
+        }
+    }
     mavenCentral()
     maven("https://maven.fabricmc.net/") { name = "Fabric" }
     maven("https://maven.the-glitch.network") { name = "The Glitch" }
     maven("https://maven.nucleoid.xyz") { name = "NucleoidMC" }
     maven("https://maven.shedaniel.me/")
     maven("https://maven-nucleoid.pb4.eu/") { name = "NucleoidMC Fallback" }
+    maven("https://jitpack.io/") {
+        name = "JitPack"
+        mavenContent {
+            includeGroupByRegex("com\\.github\\..*")
+        }
+    }
 }
 
 dependencies {
@@ -44,6 +56,8 @@ dependencies {
         exclude(module = "fabric-gametest-api-v1")
     }
     modImplementation("dev.gegy:markdown-chat:1.3.0", excludeFabricApi)
+    modImplementation("com.github.samolego.Config2Brigadier:config2brigadier-fabric:1.2.1", excludeFabricApi)
+    modImplementation("maven.modrinth:fabrictailor:2.0.1")
     include(modImplementation("fr.catcore:server-translations-api:1.4.14+1.19-rc2", excludeFabricApi))
 
     modRuntimeOnly("net.fabricmc:fabric-language-kotlin:1.8.2+kotlin.1.7.10")

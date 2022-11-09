@@ -37,9 +37,11 @@
     "java": ">=17"
   },
   "recommends": {
-    "server_translations_api": "<=1.4.14+1.19-rc2"
+    "server_translations_api": "<=1.4.14+1.19-rc2",
+    "fabrictailor": ">=1.9.0"
   },
   "breaks": {
-    "server_translations_api": "1.4.15+1.19||1.4.16+1.19"
+    "server_translations_api": "1.4.15+1.19||1.4.16+1.19",
+    "fabrictailor": "<1.9.0"
   }
 }
