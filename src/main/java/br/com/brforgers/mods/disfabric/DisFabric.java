@@ -62,7 +62,7 @@ public class DisFabric implements DedicatedServerModInitializer {
                         .setChunkingFilter(ChunkingFilter.ALL)
                         .addEventListeners(new DiscordEventListener())
                         .setMemberCachePolicy(MemberCachePolicy.ALL)
-                        .enableIntents(GatewayIntent.GUILD_MEMBERS);
+                        .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT);
                 DisFabric.jda = builder.build();
                 DisFabric.jda.awaitReady();
                 DisFabric.bridgeChannel = requireMessageChannel(DisFabric.jda.getGuildChannelById(config.channelId), "No such bridge channel");
