@@ -58,6 +58,7 @@ dependencies {
     modImplementation("dev.gegy:markdown-chat:1.3.0", excludeFabricApi)
     modImplementation("com.github.samolego.Config2Brigadier:config2brigadier-fabric:1.2.1", excludeFabricApi)
     modImplementation("maven.modrinth:fabrictailor:2.0.1")
+    modRuntimeOnly("maven.modrinth:drogtor:1.1.3+1.19")
     include(modImplementation("fr.catcore:server-translations-api:1.4.14+1.19-rc2", excludeFabricApi))
 
     modRuntimeOnly("net.fabricmc:fabric-language-kotlin:1.8.2+kotlin.1.7.10")

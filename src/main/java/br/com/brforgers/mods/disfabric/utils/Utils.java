@@ -40,6 +40,10 @@ public class Utils {
         return "https://mc-heads.net/avatar/" + player.getUuid() + "/128";
     }
 
+    public static String playerName(PlayerEntity player) {
+        return player.getDisplayName().getString();
+    }
+
     // FIXME: Ignore content in codeblocks (wrapped in `, `` and ```)
     // FIXME: Make more efficient caching logic for mentions.
     //  Ideally, the lookup is constant time with linear search by hash of
