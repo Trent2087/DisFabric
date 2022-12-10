@@ -18,7 +18,7 @@ import static net.minecraft.server.command.CommandManager.literal;
  * @author KJP12
  * @since 1.3.5
  **/
-public class SuggestCommand {
+public final class SuggestCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         var suggestionChannel = DisFabric.suggestionChannel;
         if (suggestionChannel != null) {

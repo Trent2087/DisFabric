@@ -7,9 +7,9 @@ import br.com.brforgers.mods.disfabric.markdown.TimeNode;
 import br.com.brforgers.mods.disfabric.utils.Utils;
 import dev.gegy.mdchat.StylerBootstrap;
 import dev.gegy.mdchat.TextStyler;
-import net.dv8tion.jda.api.entities.Channel;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.Channel;
 
 /**
  * @author KJP12

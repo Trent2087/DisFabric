@@ -1,10 +1,6 @@
 package br.com.brforgers.mods.disfabric.commands;
 
 import br.com.brforgers.mods.disfabric.events.ServerChatCallback;
-import br.com.brforgers.mods.disfabric.mixins.MixinMessageArgumentType;
-import br.com.brforgers.mods.disfabric.mixins.MixinMessageArgumentType$SignedMessage;
-import br.com.brforgers.mods.disfabric.utils.CustomisedSignedMessage;
-import br.com.brforgers.mods.disfabric.utils.DecoratorContainer;
 import br.com.brforgers.mods.disfabric.utils.Utils;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
@@ -62,7 +58,6 @@ public class EmoteCommand implements MessageDecorator, CommandRegistrationCallba
         this.NAME = name;
         this.EMOTE = emote;
         this.message = MessageArgumentType.message();
-        ((DecoratorContainer) message).disfabric$setDecorator(this);
     }
 
     /**
@@ -75,16 +70,24 @@ public class EmoteCommand implements MessageDecorator, CommandRegistrationCallba
     @Override
     public void register(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registryAccess, CommandManager.RegistrationEnvironment environment) {
         dispatcher.register(literal(NAME).then(argument("message", message).executes(context -> {
-            var signedMessage = MessageArgumentType.getSignedMessage(context, "message");
             var source = context.getSource();
-            var playerManager = source.getServer().getPlayerManager();
-            ((CustomisedSignedMessage) (Object) signedMessage).disfabric$decorate(source,
-                    decorated -> playerManager.broadcast(decorated, source, MessageType.params(MessageType.CHAT, source)),
-                    ((DecoratorContainer) message).disfabric$asDecorator(source.getServer()));
-            var player = source.getPlayer();
-            if (player != null) {
-                ServerChatCallback.EVENT.invoker().onServerChat(player, signedMessage.signedArgument().getSignedContent().plain() + ' ' + EMOTE);
-            }
+
+            MessageArgumentType.getSignedMessage(context, "message", message -> {
+                var player = source.getPlayer();
+                var playerManager = source.getServer().getPlayerManager();
+
+
+                // Fun fact: It's perfectly fine to do this as the client will
+                // just see it as signed, unaltered in a significant manner.
+                var redecorated = message.getContent().copy().append(' ' + EMOTE);
+                var signedRedecorated = message.withUnsignedContent(redecorated);
+
+                playerManager.broadcast(signedRedecorated, source, MessageType.params(MessageType.CHAT, source));
+
+                if (player != null) {
+                    ServerChatCallback.EVENT.invoker().onServerChat(player, message.getSignedContent() + ' ' + EMOTE);
+                }
+            });
             return Command.SINGLE_SUCCESS;
         })).executes(context -> {
             var source = context.getSource();

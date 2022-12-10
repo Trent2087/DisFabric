@@ -23,7 +23,7 @@ import static net.minecraft.server.command.CommandManager.literal;
  * @author KJP12
  * @since 1.3.5
  **/
-public class ReportCommand {
+public final class ReportCommand {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         boolean enable = false;
         var report = literal("report").requires(src -> src.getEntity() instanceof ServerPlayerEntity);
