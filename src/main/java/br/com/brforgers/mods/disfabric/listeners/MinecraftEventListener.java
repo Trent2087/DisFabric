@@ -4,6 +4,7 @@ import br.com.brforgers.mods.disfabric.DisFabric;
 import br.com.brforgers.mods.disfabric.events.PlayerAdvancementCallback;
 import br.com.brforgers.mods.disfabric.events.PlayerDeathCallback;
 import br.com.brforgers.mods.disfabric.events.ServerChatCallback;
+import br.com.brforgers.mods.disfabric.markdown.SpecialStringType;
 import br.com.brforgers.mods.disfabric.utils.Utils;
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONObject;
@@ -23,7 +24,7 @@ public class MinecraftEventListener {
         if (!DisFabric.config.commandsOnly) {
             ServerMessageDecoratorEvent.EVENT.addPhaseOrdering(DISFABRIC_CHAT, Event.DEFAULT_PHASE);
             ServerMessageDecoratorEvent.EVENT.register(DISFABRIC_CHAT, (sender, message) ->
-                    CompletableFuture.completedFuture(DisFabric.stop ? message : Text.of(Utils.convertMentionsFromNames(message.getString()))));
+                    CompletableFuture.completedFuture(DisFabric.stop ? message : Text.of(Utils.convertMentionsFromNames(SpecialStringType.preprocess(message.getString())))));
             ServerChatCallback.EVENT.register((playerEntity, rawMessage) -> {
                 if (!DisFabric.stop) {
                     String convertedString = Utils.convertMentionsFromNames(rawMessage);
