@@ -1,7 +1,6 @@
 package br.com.brforgers.mods.disfabric.markdown;// Created 2022-04-03T04:25:43
 
 import org.commonmark.Extension;
-import org.commonmark.node.Node;
 import org.commonmark.node.Nodes;
 import org.commonmark.node.Text;
 import org.commonmark.parser.Parser;
@@ -10,6 +9,8 @@ import org.commonmark.parser.delimiter.DelimiterRun;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static br.com.brforgers.mods.disfabric.markdown.MarkdownUtil.insertBetween;
 
 /**
  * @author KJP12
@@ -30,6 +31,7 @@ public class DiscordChatExtension implements Parser.ParserExtension {
     @Override
     public void extend(Parser.Builder parserBuilder) {
         parserBuilder.customDelimiterProcessor(new MentionDelimiterProcessor());
+        parserBuilder.customDelimiterProcessor(new SpecialStringDelimiterProcessor());
     }
 
     private static class MentionDelimiterProcessor implements DelimiterProcessor {
@@ -86,16 +88,43 @@ public class DiscordChatExtension implements Parser.ParserExtension {
             }
             return 0;
         }
+    }
 
-        /**
-         * copy from mdchat
-         */
-        private void insertBetween(Text opener, Text closer, Node node) {
-            for (var sibling : Nodes.between(opener, closer)) {
-                node.appendChild(sibling);
+    private static class SpecialStringDelimiterProcessor implements DelimiterProcessor {
+        @Override
+        public char getOpeningCharacter() {
+            return '\b';
+        }
+
+        @Override
+        public char getClosingCharacter() {
+            return '\b';
+        }
+
+        @Override
+        public int getMinLength() {
+            return 1;
+        }
+
+        @Override
+        public int process(DelimiterRun openingRun, DelimiterRun closingRun) {
+            if (openingRun.length() >= 1 && closingRun.length() >= 1) {
+                Text opener = openingRun.getOpener();
+                Text closer = closingRun.getCloser();
+                StringBuilder why = new StringBuilder();
+                for (var node : Nodes.between(opener, closer)) {
+                    if (!(node instanceof Text text)) return 0;
+                    why.append(text.getLiteral());
+                }
+
+                final var value = SpecialStringType.nameToTypeStore.get(why.toString());
+
+                if (value != null) {
+                    insertBetween(opener, closer, value.node());
+                    return 1;
+                }
             }
-
-            opener.insertAfter(node);
+            return 0;
         }
     }
 }

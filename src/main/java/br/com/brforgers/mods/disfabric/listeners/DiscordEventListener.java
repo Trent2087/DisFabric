@@ -1,6 +1,7 @@
 package br.com.brforgers.mods.disfabric.listeners;
 
 import br.com.brforgers.mods.disfabric.DisFabric;
+import br.com.brforgers.mods.disfabric.markdown.SpecialStringType;
 import br.com.brforgers.mods.disfabric.utils.DiscordCommandOutput;
 import br.com.brforgers.mods.disfabric.utils.Utils;
 import com.mojang.authlib.Agent;
@@ -134,7 +135,7 @@ public class DiscordEventListener extends ListenerAdapter {
                 var message = raw.isBlank() ? Text.empty() :
                         server.getMessageDecorator().decorate(null, Text.of(raw)).join().copy();
                 /*/
-                var styledMessage = TextStyler.INSTANCE.apply(raw);
+                var styledMessage = TextStyler.INSTANCE.apply(SpecialStringType.preprocess(raw));
 
                 var message = styledMessage == null ? Text.empty() : styledMessage.copy();
                 /**/

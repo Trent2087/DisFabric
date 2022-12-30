@@ -1,9 +1,6 @@
 package br.com.brforgers.mods.disfabric;// Created 2022-05-03T04:45:21
 
-import br.com.brforgers.mods.disfabric.markdown.DiscordChatExtension;
-import br.com.brforgers.mods.disfabric.markdown.EmoteNode;
-import br.com.brforgers.mods.disfabric.markdown.MentionNode;
-import br.com.brforgers.mods.disfabric.markdown.TimeNode;
+import br.com.brforgers.mods.disfabric.markdown.*;
 import br.com.brforgers.mods.disfabric.utils.Utils;
 import dev.gegy.mdchat.StylerBootstrap;
 import dev.gegy.mdchat.TextStyler;
@@ -46,6 +43,8 @@ public class MarkdownBootstrap implements StylerBootstrap {
                 }
             } else if (node instanceof TimeNode time) {
                 return Utils.convertUnknownEntityToFormattedText(time.timestamp, "time", time.style.style(time.timestamp));
+            } else if (node instanceof SpecialStringNode special) {
+                return special.type.text.copyContentOnly();
             }
             return null;
         });
