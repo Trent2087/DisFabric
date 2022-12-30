@@ -17,10 +17,10 @@ import net.minecraft.util.Identifier;
 
 import java.util.concurrent.CompletableFuture;
 
-public class MinecraftEventListener {
+public final class MinecraftEventListener {
     private static final Identifier DISFABRIC_CHAT = Identifier.of("disfabric", "decorator");
 
-    public void init() {
+    public static void init() {
         if (!DisFabric.config.commandsOnly) {
             ServerMessageDecoratorEvent.EVENT.addPhaseOrdering(DISFABRIC_CHAT, Event.DEFAULT_PHASE);
             ServerMessageDecoratorEvent.EVENT.register(DISFABRIC_CHAT, (sender, message) ->
