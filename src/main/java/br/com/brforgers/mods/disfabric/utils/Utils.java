@@ -17,6 +17,7 @@ public class Utils {
             userMention = Pattern.compile("@([^@#:\\s][^@#:]{0,30}[^@#:\\s])(?:#(\\d{4}))?");
 
     private static final boolean fabricTailorAvailable = FabricLoader.getInstance().isModLoaded("fabrictailor");
+    public static final int BLURPLE = 0x7289DA;
 
     /**
      * Provides a face avatar for use with webhooks and embeds,
@@ -161,7 +162,7 @@ public class Utils {
         var username = Text.literal(text);
         var memberStyle = username.getStyle();
         memberStyle = memberStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Discord " + type + '\n' + id)));
-        memberStyle = memberStyle.withColor(0x7289DA);
+        memberStyle = memberStyle.withColor(BLURPLE);
         username.setStyle(memberStyle);
         return username;
     }
@@ -179,8 +180,8 @@ public class Utils {
         var memberStyle = username.getStyle();
         memberStyle = memberStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Discord: " + user.getAsTag() + '\n' + user.getIdLong())));
         memberStyle = memberStyle.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, '@' + user.getAsTag()));
-        int color = member == null ? -1 : member.getColorRaw();
-        memberStyle = memberStyle.withColor(color == -1 ? 0x7289DA : color);
+        int color = member == null ? Role.DEFAULT_COLOR_RAW : member.getColorRaw();
+        memberStyle = memberStyle.withColor(color == Role.DEFAULT_COLOR_RAW ? BLURPLE : color);
         username.setStyle(memberStyle);
         return username;
     }
@@ -198,7 +199,7 @@ public class Utils {
         memberStyle = memberStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Discord Role\n" + role.getIdLong())));
         memberStyle = memberStyle.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, '@' + role.getName()));
         int color = role.getColorRaw();
-        memberStyle = memberStyle.withColor(color == -1 ? 0x7289DA : color);
+        memberStyle = memberStyle.withColor(color == Role.DEFAULT_COLOR_RAW ? BLURPLE : color);
         username.setStyle(memberStyle);
         return username;
     }
@@ -215,7 +216,7 @@ public class Utils {
         var memberStyle = username.getStyle();
         memberStyle = memberStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Discord Channel\n" + channel.getIdLong())));
         memberStyle = memberStyle.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, '#' + channel.getName()));
-        memberStyle = memberStyle.withColor(0x7289DA);
+        memberStyle = memberStyle.withColor(BLURPLE);
         username.setStyle(memberStyle);
         return username;
     }
@@ -232,7 +233,7 @@ public class Utils {
         var channelStyle = channelName.getStyle();
         channelStyle = channelStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Discord Channel\n" + channel.getIdLong())));
         channelStyle = channelStyle.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, convertChannelToLink(channel)));
-        channelStyle = channelStyle.withColor(0x7289DA);
+        channelStyle = channelStyle.withColor(BLURPLE);
         channelName.setStyle(channelStyle);
         return channelName;
     }
@@ -250,7 +251,7 @@ public class Utils {
         var channelStyle = channelName.getStyle();
         channelStyle = channelStyle.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Discord Channel\n" + channel.getIdLong())));
         channelStyle = channelStyle.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, message.getJumpUrl()));
-        channelStyle = channelStyle.withColor(0x7289DA);
+        channelStyle = channelStyle.withColor(BLURPLE);
         channelName.setStyle(channelStyle);
         return channelName;
     }
