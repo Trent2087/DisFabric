@@ -95,7 +95,7 @@ public class DisFabric implements DedicatedServerModInitializer {
                 Unirest.shutDown();
                 DisFabric.jda.shutdownNow();
             });
-            new MinecraftEventListener().init();
+            MinecraftEventListener.init();
 
         }
         var event = CommandRegistrationCallback.EVENT;

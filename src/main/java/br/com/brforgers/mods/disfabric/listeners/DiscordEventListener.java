@@ -150,7 +150,7 @@ public class DiscordEventListener extends ListenerAdapter {
         }
     }
 
-    public ServerCommandSource getDiscordCommandSource(@NotNull MessageReceivedEvent e){
+    public static ServerCommandSource getDiscordCommandSource(@NotNull MessageReceivedEvent e) {
         ServerWorld serverWorld = Objects.requireNonNull(getServer()).getOverworld();
 
         User author = e.getAuthor();
@@ -159,12 +159,12 @@ public class DiscordEventListener extends ListenerAdapter {
         return new ServerCommandSource(new DiscordCommandOutput(), serverWorld == null ? Vec3d.ZERO : Vec3d.of(serverWorld.getSpawnPos()), Vec2f.ZERO, serverWorld, 4, username, Text.of(username), getServer(), null);
     }
 
-    private MinecraftServer getServer(){
+    private static MinecraftServer getServer() {
         @SuppressWarnings("deprecation")
         Object gameInstance = FabricLoader.getInstance().getGameInstance();
         if (gameInstance instanceof MinecraftServer) {
             return (MinecraftServer) gameInstance;
-        }else {
+        } else {
             return null;
         }
     }
