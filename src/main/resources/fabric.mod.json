@@ -2,18 +2,19 @@
   "schemaVersion": 1,
   "id": "disfabric",
   "version": "${version}",
-
-  "name": "DisFabric",
+  "name": "The Glitch Fork of DisFabric",
   "description": "A barebones Discord <-> Minecraft chat bridge.",
   "authors": [
+    "KJP12",
     "BRForgers Team",
     "armelin1",
     "D4rkness_King",
     "jonatsp"
   ],
   "contact": {
-    "homepage": "https://github.com/BRForgers/DisFabric",
-    "sources": "https://github.com/BRForgers/DisFabric"
+    "homepage": "https://github.com/the-glitch-network/DisFabric",
+    "sources": "https://github.com/the-glitch-network/DisFabric",
+    "issues": "https://github.com/the-glitch-network/DisFabric/issues"
   },
 
   "environment": "server",
@@ -31,13 +32,13 @@
   "depends": {
     "fabricloader": ">=0.12.8",
     "fabric": "*",
+    "server_translations_api": "*",
     "fabric-language-kotlin": "*",
     "markdown_chat": "*",
-    "minecraft": "1.19.x",
+    "minecraft": "1.19.2",
     "java": ">=17"
   },
   "recommends": {
-    "server_translations_api": "<=1.4.14+1.19-rc2",
     "fabrictailor": ">=1.9.0"
   },
   "breaks": {
