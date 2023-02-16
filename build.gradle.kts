@@ -71,6 +71,10 @@ dependencies {
         exclude(module = "opus-java")
     })
 
+    modApi("maven.modrinth:vanish:1.3.2") {
+        isTransitive = false
+    }
+
     include(modApi("me.sargunvohra.mcmods:autoconfig1u:3.3.1", excludeFabricApi))
     include(implementation("com.konghq:unirest-java:3.13.10:standalone") {
         exclude(group = "com.google.code.gson", module = "gson")
