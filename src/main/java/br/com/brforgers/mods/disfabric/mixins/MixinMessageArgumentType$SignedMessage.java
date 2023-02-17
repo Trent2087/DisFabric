@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
- * @author KJP12
+ * @author Ampflower
  * @since 1.4.0
  **/
 @Mixin(MessageArgumentType.SignedMessage.class)

@@ -10,7 +10,7 @@ import java.util.function.Consumer;
  * {@link net.minecraft.command.argument.MessageArgumentType.SignedMessage}
  * with a custom decorator input.
  *
- * @author KJP12
+ * @author Ampflower
  * @since 1.4.0
  **/
 public interface CustomisedSignedMessage {

@@ -3,7 +3,7 @@ package br.com.brforgers.mods.disfabric.markdown;// Created 2022-05-03T02:17:39
 import org.commonmark.node.CustomNode;
 
 /**
- * @author KJP12
+ * @author Ampflower
  * @since 1.3.5
  **/
 public class EmoteNode extends CustomNode {

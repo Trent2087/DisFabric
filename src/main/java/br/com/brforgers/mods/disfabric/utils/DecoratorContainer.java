@@ -7,7 +7,7 @@ import net.minecraft.server.MinecraftServer;
  * Decorator container interface for anything that has a
  * custom decorator attached.
  *
- * @author KJP12
+ * @author Ampflower
  * @see br.com.brforgers.mods.disfabric.mixins.MixinMessageArgumentType
  * @since 1.4.0
  **/

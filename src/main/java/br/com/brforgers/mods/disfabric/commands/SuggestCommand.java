@@ -15,7 +15,7 @@ import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
 /**
- * @author KJP12
+ * @author Ampflower
  * @since 1.3.5
  **/
 public class SuggestCommand {

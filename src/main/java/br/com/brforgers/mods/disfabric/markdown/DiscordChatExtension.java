@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 import static br.com.brforgers.mods.disfabric.markdown.MarkdownUtil.insertBetween;
 
 /**
- * @author KJP12
+ * @author Ampflower
  * @since 1.3.5
  **/
 public class DiscordChatExtension implements Parser.ParserExtension {

@@ -20,7 +20,7 @@ import static net.minecraft.server.command.CommandManager.literal;
  * {@code /report bug &lt;description&gt;}<br/>
  * {@code /report player &lt;player&gt; &lt;description&gt;}
  *
- * @author KJP12
+ * @author Ampflower
  * @since 1.3.5
  **/
 public class ReportCommand {

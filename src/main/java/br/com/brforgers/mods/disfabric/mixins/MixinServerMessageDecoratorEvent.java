@@ -21,7 +21,7 @@ import java.util.function.Function;
  * allow chat signing to work correctly for stuff like timestamps, and to
  * help reduce load of spam.
  *
- * @author KJP12
+ * @author Ampflower
  * @since 1.4.0
  **/
 @Pseudo
@@ -39,7 +39,7 @@ public class MixinServerMessageDecoratorEvent {
      *
      * @param function The original invoker generator.
      * @return The caching invoker.
-     * @author KJP12
+     * @author Ampflower
      * @reason This was the least invasive way to allow for caching.
      */
     @ModifyArg(method = "<clinit>", at = @At(value = "INVOKE", target = "Lnet/fabricmc/fabric/api/event/EventFactory;createWithPhases(Ljava/lang/Class;Ljava/util/function/Function;[Lnet/minecraft/util/Identifier;)Lnet/fabricmc/fabric/api/event/Event;"), require = 0)

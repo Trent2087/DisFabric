@@ -16,7 +16,7 @@ import java.util.function.BiFunction;
  * @param <K> Primary key.
  * @param <C> Cache key.
  * @param <V> Value.
- * @author KJP12
+ * @author Ampflower
  * @since 1.4.0
  **/
 public class WeakCacheTable<K, C, V> {
@@ -73,7 +73,7 @@ public class WeakCacheTable<K, C, V> {
      */
     private class WeakRow extends WeakReference<C> {
         private final K k;
-        private V v;
+        private final V v;
 
         WeakRow(K k, C c, V v) {
             super(c, queue);

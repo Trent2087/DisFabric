@@ -5,7 +5,7 @@ import org.commonmark.node.Nodes;
 import org.commonmark.node.Text;
 
 /**
- * @author KJP12
+ * @author Ampflower
  * @since ${version}
  **/
 final class MarkdownUtil {
