@@ -10,7 +10,7 @@ import java.time.temporal.ValueRange;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author KJP12
+ * @author Ampflower
  * @since 1.3.5
  **/
 public enum TimeStyle {

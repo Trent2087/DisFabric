@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * Special-cased strings to mimick Discord's special casing of strings.
  *
- * @author KJP12
+ * @author Ampflower
  * @since ${version}
  **/
 public enum SpecialStringType {

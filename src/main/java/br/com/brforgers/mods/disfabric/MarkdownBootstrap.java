@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.Channel;
 
 /**
- * @author KJP12
+ * @author Ampflower
  * @since 1.3.5
  **/
 public class MarkdownBootstrap implements StylerBootstrap {
