@@ -11,6 +11,10 @@ public class Configuration implements ConfigData {
     @ConfigEntry.Category(value = "CommandsOnly")
     public boolean commandsOnly = false;
 
+    @Comment(value = "Allow users to `!whitelist` themselves?")
+    @ConfigEntry.Category(value = "Commands")
+    public boolean publicWhitelist = false;
+
     @Comment(value = "Sets if DisFabric Should Modify In-Game Chat Messages")
     @ConfigEntry.Category(value = "MinecraftChat")
     public boolean modifyChatMessages = true;

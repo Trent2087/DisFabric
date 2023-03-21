@@ -48,9 +48,12 @@ public class DiscordEventListener extends ListenerAdapter {
                         server.execute(() -> server.getCommandManager().executeWithPrefix(getDiscordCommandSource(e), command));
                     }
                     case "whitelist" -> {
+                        if (!DisFabric.config.publicWhitelist &&
+                                !Arrays.asList(DisFabric.config.adminsIds).contains(e.getAuthor().getId())) return;
+
                         String username = raw.substring(space + 1).strip();
 
-                        if (username.isBlank()) {
+                        if (username.isBlank() || space == -1) {
                             channel.sendMessage("Enter a username").queue();
                             return;
                         } else if (username.indexOf(' ') >= 0) {
@@ -87,7 +90,7 @@ public class DiscordEventListener extends ListenerAdapter {
                             var entry = new WhitelistEntry(profile);
 
                             if (whitelist.isAllowed(profile)) {
-                                channel.sendMessage("`" + profile.getName() + "` already whitelisted.").queue();
+                                channel.sendMessage("`" + profile.getName() + "` is already whitelisted.").queue();
                             } else {
                                 whitelist.add(entry);
                                 channel.sendMessage(e.getAuthor().getAsMention() + " ➠ Whitelisted `" + profile.getName() + '`').queue();
