@@ -159,7 +159,7 @@ public class DiscordEventListener extends ListenerAdapter {
         User author = e.getAuthor();
         String username = author.getName() + '#' + author.getDiscriminator();
 
-        return new ServerCommandSource(new DiscordCommandOutput(), serverWorld == null ? Vec3d.ZERO : Vec3d.of(serverWorld.getSpawnPos()), Vec2f.ZERO, serverWorld, 4, username, Text.of(username), getServer(), null);
+        return new ServerCommandSource(new DiscordCommandOutput(), serverWorld == null ? Vec3d.ZERO : Vec3d.of(serverWorld.getSpawnPos()), Vec2f.ZERO, serverWorld, DisFabric.config.adminPermissionLevel, username, Text.of(username), getServer(), null);
     }
 
     private static MinecraftServer getServer() {

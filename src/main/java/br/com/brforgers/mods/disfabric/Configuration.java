@@ -46,6 +46,12 @@ public class Configuration implements ConfigData {
     @ConfigEntry.Category(value = "Discord")
     public String[] adminsIds = {""};
 
+    @Comment(value = """
+            The permission level that admins have when issuing commands.
+            """)
+    @ConfigEntry.Category(value = "Discord")
+    public int adminPermissionLevel = 4;
+
     @Comment(value = "Channel id in Discord")
     @ConfigEntry.Category(value = "Discord")
     public String channelId = "";
