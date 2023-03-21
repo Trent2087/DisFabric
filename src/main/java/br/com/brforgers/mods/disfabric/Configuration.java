@@ -7,8 +7,8 @@ import me.sargunvohra.mcmods.autoconfig1u.shadowed.blue.endless.jankson.Comment;
 
 @Config(name = DisFabric.MOD_ID)
 public class Configuration implements ConfigData {
-    @Comment(value = "Do you only what to use disfabric for commands?")
-    @ConfigEntry.Category(value = "CommandsOnly")
+    @Comment(value = "Do you only what to use DisFabric for commands?")
+    @ConfigEntry.Category(value = "Commands")
     public boolean commandsOnly = false;
 
     @Comment(value = "Allow users to `!whitelist` themselves?")
