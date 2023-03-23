@@ -1,5 +1,5 @@
 plugins {
-    id("fabric-loom") version "1.1.+"
+    id("fabric-loom") version "1.0.+"
     id("maven-publish")
     id("project-report")
 }
@@ -72,7 +72,6 @@ dependencies {
     })
 
     include(modApi("me.sargunvohra.mcmods:autoconfig1u:3.3.1", excludeFabricApi))
-    include(modApi("me.shedaniel.cloth:cloth-config-fabric:7.0.72", excludeFabricApi))
     include(implementation("com.konghq:unirest-java:3.13.10:standalone") {
         exclude(group = "com.google.code.gson", module = "gson")
         exclude(group = "org.apache.httpcomponents", module = "httpclient")
