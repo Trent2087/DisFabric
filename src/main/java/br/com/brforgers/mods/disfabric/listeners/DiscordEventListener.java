@@ -27,7 +27,6 @@ import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -37,19 +36,19 @@ public class DiscordEventListener extends ListenerAdapter {
     public void onMessageReceived(@NotNull MessageReceivedEvent e) {
         MinecraftServer server = getServer();
         MessageChannel channel = e.getChannel();
-        if (server != null && !e.getAuthor().isBot() && channel.getId().equals(DisFabric.config.channelId)) {
+        if (server != null && !e.getAuthor().isBot() && channel.getIdLong() == DisFabric.config.bridgeChannel) {
             String raw = e.getMessage().getContentRaw();
             if (raw.startsWith("!")) {
                 int space = raw.indexOf(' ', 1);
                 switch (space == -1 ? raw.substring(1) : raw.substring(1, space)) {
                     case "console" -> {
-                        if (!Arrays.asList(DisFabric.config.adminsIds).contains(e.getAuthor().getId())) return;
+                        if (!DisFabric.config.admins.contains(e.getAuthor().getIdLong())) return;
                         String command = raw.substring(space + 1);
                         server.execute(() -> server.getCommandManager().executeWithPrefix(getDiscordCommandSource(e), command));
                     }
                     case "whitelist" -> {
                         if (!DisFabric.config.publicWhitelist &&
-                                !Arrays.asList(DisFabric.config.adminsIds).contains(e.getAuthor().getId())) return;
+                                !DisFabric.config.admins.contains(e.getAuthor().getIdLong())) return;
 
                         String username = raw.substring(space + 1).strip();
 

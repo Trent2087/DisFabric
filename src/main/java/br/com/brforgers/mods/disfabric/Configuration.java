@@ -5,6 +5,9 @@ import me.sargunvohra.mcmods.autoconfig1u.annotation.Config;
 import me.sargunvohra.mcmods.autoconfig1u.annotation.ConfigEntry;
 import me.sargunvohra.mcmods.autoconfig1u.shadowed.blue.endless.jankson.Comment;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Config(name = DisFabric.MOD_ID)
 public class Configuration implements ConfigData {
     @Comment(value = "Do you only what to use DisFabric for commands?")
@@ -35,26 +38,63 @@ public class Configuration implements ConfigData {
     @ConfigEntry.Category(value = "Discord")
     public String webhookURL = "";
 
-    @Comment(value = """
-            Admins ids in Discord; see https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-
-            If more than one, enclose each id in quotation marks separated by commas, like this:
-            "adminsIds": [\s
-            \t\t"000",
-            \t\t"111",
-            \t\t"222"
-            \t]""")
+    @Deprecated(forRemoval = true)
+    @Comment(value = "[Deprecated] - Use `admins` instead.")
     @ConfigEntry.Category(value = "Discord")
-    public String[] adminsIds = {""};
+    public Set<String> adminsIds = new HashSet<>();
 
     @Comment(value = """
-            The permission level that admins have when issuing commands.
-            """)
+            Admins IDs in Discord, either role or user; see https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-
+                        
+            If you're adding more than one admin, separate using commas, like this:
+            "adminsIds": [\s
+            \t\t000,
+            \t\t111,
+            \t\t222
+            \t]""")
+    @ConfigEntry.Category(value = "Discord")
+    public Set<Long> admins = new HashSet<>();
+
+    @Deprecated
+    boolean migrateAdmins() {
+        if (adminsIds != null && !adminsIds.isEmpty()) {
+            for (var str : adminsIds) {
+                admins.add(Long.parseUnsignedLong(str));
+            }
+            adminsIds = null;
+            return true;
+        }
+        return false;
+    }
+
+    @Comment(value = "The permission level that admins have when issuing commands.")
     @ConfigEntry.Category(value = "Discord")
     public int adminPermissionLevel = 4;
 
-    @Comment(value = "Channel id in Discord")
+    @Deprecated(forRemoval = true)
+    @Comment(value = "[Deprecated] Use `bridgeChannel` instead.")
     @ConfigEntry.Category(value = "Discord")
-    public String channelId = "";
+    public String channelId;
+
+    @Comment(value = "The bridge channel in Discord.")
+    @ConfigEntry.Category(value = "Discord")
+    public long bridgeChannel = 0L;
+
+    @Deprecated
+    boolean migrateBridgeChannel() {
+        if (channelId != null && !channelId.isBlank()) {
+            try {
+                bridgeChannel = Long.parseUnsignedLong(channelId);
+            } catch (NumberFormatException e) {
+                if (bridgeChannel == 0L) {
+                    throw new RuntimeException("Malformed config: channelId cannot be parsed as a Discord snowflake.");
+                }
+            }
+            channelId = null;
+            return true;
+        }
+        return false;
+    }
 
     @Comment("Bug reports channel in Discord. Will be disabled when set to 0.")
     @ConfigEntry.Category("Discord")
