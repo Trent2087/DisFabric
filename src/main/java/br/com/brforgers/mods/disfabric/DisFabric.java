@@ -5,6 +5,7 @@ import br.com.brforgers.mods.disfabric.commands.ReportCommand;
 import br.com.brforgers.mods.disfabric.commands.SuggestCommand;
 import br.com.brforgers.mods.disfabric.listeners.DiscordEventListener;
 import br.com.brforgers.mods.disfabric.listeners.MinecraftEventListener;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import kong.unirest.Unirest;
 import me.sargunvohra.mcmods.autoconfig1u.AutoConfig;
 import me.sargunvohra.mcmods.autoconfig1u.serializer.JanksonConfigSerializer;
@@ -33,7 +34,8 @@ import java.util.concurrent.ScheduledExecutorService;
 public class DisFabric implements DedicatedServerModInitializer {
 
     public static final String MOD_ID = "disfabric";
-    public static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    public static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(
+            new ThreadFactoryBuilder().setDaemon(true).build());
     public static final Logger logger = LogManager.getLogger(MOD_ID);
     public static Configuration config;
     public static JDA jda;
