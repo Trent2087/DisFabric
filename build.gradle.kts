@@ -30,6 +30,7 @@ repositories {
         }
     }
     mavenCentral()
+    maven("https://oss.sonatype.org/content/repositories/snapshots") { name = "OSS Sonatype Snapshots" }
     maven("https://maven.fabricmc.net/") { name = "Fabric" }
     maven("https://maven.the-glitch.network") { name = "The Glitch" }
     maven("https://maven.nucleoid.xyz") { name = "NucleoidMC" }
@@ -71,9 +72,17 @@ dependencies {
         exclude(module = "opus-java")
     })
 
-    modApi("maven.modrinth:vanish:1.3.2") {
+    // 1.3.2
+    modImplementation("maven.modrinth:vanish:zr3pJkB2") {
+        excludeFabricApi(this)
         isTransitive = false
     }
+
+    // JIJ is useless, why; required for Vanish
+    modRuntimeOnly("eu.pb4:player-data-api:0.2.1+1.19")
+    modRuntimeOnly("eu.pb4:placeholder-api:2.0.0-beta.7+1.19")
+    modRuntimeOnly("com.github.LlamaLad7:MixinExtras:0.1.1")
+    modRuntimeOnly("me.lucko:fabric-permissions-api:0.2-SNAPSHOT")
 
     include(modApi("me.sargunvohra.mcmods:autoconfig1u:3.3.1", excludeFabricApi))
     include(implementation("com.konghq:unirest-java:3.13.10:standalone") {
