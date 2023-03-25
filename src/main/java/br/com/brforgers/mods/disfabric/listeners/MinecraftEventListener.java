@@ -28,26 +28,26 @@ public final class MinecraftEventListener {
             ServerMessageDecoratorEvent.EVENT.register(DISFABRIC_CHAT, (sender, message) ->
                     CompletableFuture.completedFuture(DisFabric.stop ? message : Text.of(Utils.convertMentionsFromNames(SpecialStringType.preprocess(message.getString())))));
             ServerChatCallback.EVENT.register((playerEntity, rawMessage) -> {
-                if (!DisFabric.stop) {
-                    String convertedString = Utils.convertMentionsFromNames(rawMessage);
-                    if (DisFabric.config.isWebhookEnabled) {
-                        JSONObject body = new JSONObject();
-                        // TODO: Verify if this is applicable to all nickname mods
-                        //  If not, add some detection logic for getName and getDisplayName against getEntityName.
-                        body.put("username", Utils.playerName(playerEntity));
-                        body.put("avatar_url", Utils.playerAvatarUrl(playerEntity));
-                        JSONObject allowed_mentions = new JSONObject();
-                        allowed_mentions.put("parse", new String[]{"users"});
-                        body.put("allowed_mentions", allowed_mentions);
-                        body.put("content", convertedString);
-                        try {
-                            Unirest.post(DisFabric.config.webhookURL).header("Content-Type", "application/json").body(body).asJsonAsync();
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                        }
-                    } else {
-                        DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.playerMessage.replace("%playername%", MarkdownSanitizer.escape(Utils.playerName(playerEntity))).replace("%playermessage%", convertedString)).queue();
+                if (DisFabric.stop || VanishService.isChatDisabled(playerEntity)) return;
+
+                String convertedString = Utils.convertMentionsFromNames(rawMessage);
+                if (DisFabric.config.isWebhookEnabled) {
+                    JSONObject body = new JSONObject();
+                    // TODO: Verify if this is applicable to all nickname mods
+                    //  If not, add some detection logic for getName and getDisplayName against getEntityName.
+                    body.put("username", Utils.playerName(playerEntity));
+                    body.put("avatar_url", Utils.playerAvatarUrl(playerEntity));
+                    JSONObject allowed_mentions = new JSONObject();
+                    allowed_mentions.put("parse", new String[]{"users"});
+                    body.put("allowed_mentions", allowed_mentions);
+                    body.put("content", convertedString);
+                    try {
+                        Unirest.post(DisFabric.config.webhookURL).header("Content-Type", "application/json").body(body).asJsonAsync();
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
                     }
+                } else {
+                    DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.playerMessage.replace("%playername%", MarkdownSanitizer.escape(Utils.playerName(playerEntity))).replace("%playermessage%", convertedString)).queue();
                 }
             });
 
@@ -71,13 +71,13 @@ public final class MinecraftEventListener {
             });
 
             ServerPlayConnectionEvents.JOIN.register((handler, $2, $3) -> {
-                if (DisFabric.config.announcePlayers && !DisFabric.stop && !VanishService.isPlayerVanished(handler.player)) {
+                if (announcePlayers() && !VanishService.isPlayerVanished(handler.player)) {
                     DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.joinServer.replace("%playername%", MarkdownSanitizer.escape(Utils.playerName(handler.player)))).queue();
                 }
             });
 
             ServerPlayConnectionEvents.DISCONNECT.register((handler, $2) -> {
-                if (DisFabric.config.announcePlayers && !DisFabric.stop && !VanishService.isPlayerVanished(handler.player)) {
+                if (announcePlayers() && !VanishService.isPlayerVanished(handler.player)) {
                     DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.leftServer.replace("%playername%", MarkdownSanitizer.escape(Utils.playerName(handler.player)))).queue();
                 }
             });
@@ -85,11 +85,15 @@ public final class MinecraftEventListener {
         }
     }
 
+    private static boolean announcePlayers() {
+        return DisFabric.config.announcePlayers && !DisFabric.stop;
+    }
+
     /**
      * @author Octal
      */
     public static void onPlayerVanishChange(ServerPlayerEntity player, boolean vanish) {
-        if (DisFabric.config.announcePlayers && !DisFabric.stop) {
+        if (announcePlayers()) {
             DisFabric.bridgeChannel.sendMessage((vanish ? DisFabric.config.texts.leftServer : DisFabric.config.texts.joinServer).replace("%playername%", MarkdownSanitizer.escape(Utils.playerName(player)))).queue();
         }
     }
