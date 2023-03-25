@@ -5,6 +5,7 @@ import br.com.brforgers.mods.disfabric.commands.ReportCommand;
 import br.com.brforgers.mods.disfabric.commands.SuggestCommand;
 import br.com.brforgers.mods.disfabric.listeners.DiscordEventListener;
 import br.com.brforgers.mods.disfabric.listeners.MinecraftEventListener;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import kong.unirest.Unirest;
 import me.sargunvohra.mcmods.autoconfig1u.AutoConfig;
 import me.sargunvohra.mcmods.autoconfig1u.serializer.JanksonConfigSerializer;
@@ -37,7 +38,8 @@ import java.util.concurrent.ScheduledExecutorService;
 public class DisFabric implements DedicatedServerModInitializer {
 
     public static final String MOD_ID = "disfabric";
-    public static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    public static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(
+            new ThreadFactoryBuilder().setDaemon(true).build());
     public static final Logger logger = LogManager.getLogger(MOD_ID);
     public static Configuration config;
     public static JDA jda;
@@ -51,13 +53,24 @@ public class DisFabric implements DedicatedServerModInitializer {
     @Override
     public void onInitializeServer() {
         AutoConfig.register(Configuration.class, JanksonConfigSerializer::new);
-        config = AutoConfig.getConfigHolder(Configuration.class).getConfig();
+        {
+            final var holder = AutoConfig.getConfigHolder(Configuration.class);
+            config = holder.getConfig();
+
+            boolean save = config.migrateAdmins();
+            save |= config.migrateBridgeChannel();
+
+            if (save) {
+                holder.save();
+            }
+        }
+
         if (config.isWebhookEnabled && (config.webhookURL == null || config.webhookURL.isBlank())) {
             logger.error("Webhook is not set. Falling back to a regular message. Please set a webhook URL in ~/config/disfabric.json5");
             config.isWebhookEnabled = false;
         }
         try {
-            if(config.botToken == null || config.botToken.isBlank()) {
+            if (config.botToken == null || config.botToken.isBlank()) {
                 logger.error("Unable to login. Please setup the config at ~/config/disfabric.json5");
             } else {
                 JDABuilder builder = JDABuilder.createDefault(config.botToken).setHttpClient(new OkHttpClient.Builder()
@@ -69,7 +82,7 @@ public class DisFabric implements DedicatedServerModInitializer {
                         .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.MESSAGE_CONTENT);
                 DisFabric.jda = builder.build();
                 DisFabric.jda.awaitReady();
-                DisFabric.bridgeChannel = requireMessageChannel(DisFabric.jda.getGuildChannelById(config.channelId), "No such bridge channel");
+                DisFabric.bridgeChannel = requireMessageChannel(DisFabric.jda.getGuildChannelById(config.bridgeChannel), "No such bridge channel");
                 bugReportChannel = maybeMessageChannel(jda.getGuildChannelById(config.bugReportChannel));
                 userReportChannel = maybeMessageChannel(jda.getGuildChannelById(config.userReportChannel));
                 suggestionChannel = maybeMessageChannel(jda.getGuildChannelById(config.suggestionChannel));

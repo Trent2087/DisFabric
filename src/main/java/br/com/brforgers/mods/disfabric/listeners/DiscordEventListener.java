@@ -27,7 +27,6 @@ import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -37,20 +36,23 @@ public class DiscordEventListener extends ListenerAdapter {
     public void onMessageReceived(@NotNull MessageReceivedEvent e) {
         MinecraftServer server = getServer();
         MessageChannel channel = e.getChannel();
-        if (server != null && !e.getAuthor().isBot() && channel.getId().equals(DisFabric.config.channelId)) {
+        if (server != null && !e.getAuthor().isBot() && channel.getIdLong() == DisFabric.config.bridgeChannel) {
             String raw = e.getMessage().getContentRaw();
             if (raw.startsWith("!")) {
                 int space = raw.indexOf(' ', 1);
                 switch (space == -1 ? raw.substring(1) : raw.substring(1, space)) {
                     case "console" -> {
-                        if (!Arrays.asList(DisFabric.config.adminsIds).contains(e.getAuthor().getId())) return;
+                        if (!DisFabric.config.admins.contains(e.getAuthor().getIdLong())) return;
                         String command = raw.substring(space + 1);
                         server.execute(() -> server.getCommandManager().executeWithPrefix(getDiscordCommandSource(e), command));
                     }
                     case "whitelist" -> {
+                        if (!DisFabric.config.publicWhitelist &&
+                                !DisFabric.config.admins.contains(e.getAuthor().getIdLong())) return;
+
                         String username = raw.substring(space + 1).strip();
 
-                        if (username.isBlank()) {
+                        if (username.isBlank() || space == -1) {
                             channel.sendMessage("Enter a username").queue();
                             return;
                         } else if (username.indexOf(' ') >= 0) {
@@ -87,7 +89,7 @@ public class DiscordEventListener extends ListenerAdapter {
                             var entry = new WhitelistEntry(profile);
 
                             if (whitelist.isAllowed(profile)) {
-                                channel.sendMessage("`" + profile.getName() + "` already whitelisted.").queue();
+                                channel.sendMessage("`" + profile.getName() + "` is already whitelisted.").queue();
                             } else {
                                 whitelist.add(entry);
                                 channel.sendMessage(e.getAuthor().getAsMention() + " ➠ Whitelisted `" + profile.getName() + '`').queue();
@@ -156,7 +158,7 @@ public class DiscordEventListener extends ListenerAdapter {
         User author = e.getAuthor();
         String username = author.getName() + '#' + author.getDiscriminator();
 
-        return new ServerCommandSource(new DiscordCommandOutput(), serverWorld == null ? Vec3d.ZERO : Vec3d.of(serverWorld.getSpawnPos()), Vec2f.ZERO, serverWorld, 4, username, Text.of(username), getServer(), null);
+        return new ServerCommandSource(new DiscordCommandOutput(), serverWorld == null ? Vec3d.ZERO : Vec3d.of(serverWorld.getSpawnPos()), Vec2f.ZERO, serverWorld, DisFabric.config.adminPermissionLevel, username, Text.of(username), getServer(), null);
     }
 
     private static MinecraftServer getServer() {
