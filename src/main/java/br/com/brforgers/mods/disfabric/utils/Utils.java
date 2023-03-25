@@ -3,6 +3,7 @@ package br.com.brforgers.mods.disfabric.utils;
 import br.com.brforgers.mods.disfabric.DisFabric;
 import com.mojang.brigadier.context.CommandContext;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.command.ServerCommandSource;
@@ -43,6 +44,10 @@ public class Utils {
 
     public static String playerName(PlayerEntity player) {
         return player.getDisplayName().getString();
+    }
+
+    public static String sanitisedPlayerName(PlayerEntity player) {
+        return MarkdownSanitizer.escape(playerName(player));
     }
 
     // FIXME: Ignore content in codeblocks (wrapped in `, `` and ```)

@@ -13,6 +13,8 @@ import net.dv8tion.jda.api.utils.MarkdownSanitizer;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.advancement.AdvancementDisplay;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -21,6 +23,12 @@ import java.util.concurrent.CompletableFuture;
 
 public final class MinecraftEventListener {
     private static final Identifier DISFABRIC_CHAT = Identifier.of("disfabric", "decorator");
+
+    private static final String
+            playerName = "%playername%",
+            playerMessage = "%playermessage%",
+            deathMessage = "%deathmessage%",
+            advancement = "%advancement%";
 
     public static void init() {
         if (!DisFabric.config.commandsOnly) {
@@ -47,38 +55,46 @@ public final class MinecraftEventListener {
                         ex.printStackTrace();
                     }
                 } else {
-                    DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.playerMessage.replace("%playername%", MarkdownSanitizer.escape(Utils.playerName(playerEntity))).replace("%playermessage%", convertedString)).queue();
+                    bridge(DisFabric.config.texts.playerMessage,
+                            playerName, Utils.sanitisedPlayerName(playerEntity),
+                            playerMessage, convertedString);
                 }
             });
 
             PlayerAdvancementCallback.EVENT.register((playerEntity, advancement) -> {
-                if (DisFabric.config.announceAdvancements && advancement.getDisplay() != null && advancement.getDisplay().shouldAnnounceToChat() && playerEntity.getAdvancementTracker().getProgress(advancement).isDone() && !DisFabric.stop) {
-                    switch (advancement.getDisplay().getFrame()) {
-                        case GOAL ->
-                                DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.advancementGoal.replace("%playername%", MarkdownSanitizer.escape(Utils.playerName(playerEntity))).replace("%advancement%", MarkdownSanitizer.escape(advancement.getDisplay().getTitle().getString()))).queue();
-                        case TASK ->
-                                DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.advancementTask.replace("%playername%", MarkdownSanitizer.escape(Utils.playerName(playerEntity))).replace("%advancement%", MarkdownSanitizer.escape(advancement.getDisplay().getTitle().getString()))).queue();
-                        case CHALLENGE ->
-                                DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.advancementChallenge.replace("%playername%", MarkdownSanitizer.escape(Utils.playerName(playerEntity))).replace("%advancement%", MarkdownSanitizer.escape(advancement.getDisplay().getTitle().getString()))).queue();
-                    }
-                }
+                if (!DisFabric.config.announceAdvancements || DisFabric.stop) return;
+                if (VanishService.isPlayerVanished(playerEntity)) return;
+                final var display = advancement.getDisplay();
+                if (display == null || !display.shouldAnnounceToChat() ||
+                        !playerEntity.getAdvancementTracker().getProgress(advancement).isDone()) return;
+
+                final var template = switch (advancement.getDisplay().getFrame()) {
+                    case GOAL -> DisFabric.config.texts.advancementGoal;
+                    case TASK -> DisFabric.config.texts.advancementTask;
+                    case CHALLENGE -> DisFabric.config.texts.advancementChallenge;
+                };
+
+                bridgeAdvancement(template, playerEntity, display);
             });
 
             PlayerDeathCallback.EVENT.register((playerEntity, damageSource) -> {
-                if (DisFabric.config.announceDeaths && !DisFabric.stop) {
-                    DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.deathMessage.replace("%deathmessage%", MarkdownSanitizer.escape(damageSource.getDeathMessage(playerEntity).getString())).replace("%playername%", MarkdownSanitizer.escape(Utils.playerName(playerEntity)))).queue();
-                }
+                if (!DisFabric.config.announceDeaths || DisFabric.stop) return;
+                if (!VanishService.isPlayerVanished(playerEntity)) return;
+
+                bridge(DisFabric.config.texts.deathMessage,
+                        deathMessage, MarkdownSanitizer.escape(damageSource.getDeathMessage(playerEntity).getString()),
+                        playerName, Utils.sanitisedPlayerName(playerEntity));
             });
 
             ServerPlayConnectionEvents.JOIN.register((handler, $2, $3) -> {
                 if (announcePlayers() && !VanishService.isPlayerVanished(handler.player)) {
-                    DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.joinServer.replace("%playername%", MarkdownSanitizer.escape(Utils.playerName(handler.player)))).queue();
+                    bridgePlayer(DisFabric.config.texts.joinServer, handler.player);
                 }
             });
 
             ServerPlayConnectionEvents.DISCONNECT.register((handler, $2) -> {
                 if (announcePlayers() && !VanishService.isPlayerVanished(handler.player)) {
-                    DisFabric.bridgeChannel.sendMessage(DisFabric.config.texts.leftServer.replace("%playername%", MarkdownSanitizer.escape(Utils.playerName(handler.player)))).queue();
+                    bridgePlayer(DisFabric.config.texts.leftServer, handler.player);
                 }
             });
             VanishService.listen();
@@ -94,7 +110,26 @@ public final class MinecraftEventListener {
      */
     public static void onPlayerVanishChange(ServerPlayerEntity player, boolean vanish) {
         if (announcePlayers()) {
-            DisFabric.bridgeChannel.sendMessage((vanish ? DisFabric.config.texts.leftServer : DisFabric.config.texts.joinServer).replace("%playername%", MarkdownSanitizer.escape(Utils.playerName(player)))).queue();
+            bridgePlayer(vanish ? DisFabric.config.texts.leftServer : DisFabric.config.texts.joinServer, player);
         }
+    }
+
+    public static void bridge(String template, String... params) {
+        for (int i = 0; i < params.length; i += 2) {
+            template = template.replace(params[i], params[i + 1]);
+        }
+
+        DisFabric.bridgeChannel.sendMessage(template).queue();
+    }
+
+    public static void bridgePlayer(String template, PlayerEntity player) {
+        DisFabric.bridgeChannel.sendMessage(template.replace(playerName, Utils.sanitisedPlayerName(player))).queue();
+    }
+
+    public static void bridgeAdvancement(String template, PlayerEntity player, AdvancementDisplay display) {
+        DisFabric.bridgeChannel.sendMessage(template
+                .replace(playerName, Utils.sanitisedPlayerName(player))
+                .replace(advancement, MarkdownSanitizer.escape(display.getTitle().getString()))
+        ).queue();
     }
 }
