@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.entities.Activity;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WhitelistEntry;
@@ -55,7 +56,13 @@ public class DiscordEventListener extends ListenerAdapter {
     public void onMessageReceived(@NotNull MessageReceivedEvent e) {
         MinecraftServer server = getServer();
         MessageChannel channel = e.getChannel();
-        if (server != null && !e.getAuthor().isBot() && channel.getIdLong() == DisFabric.config.bridgeChannel) {
+        if(server !=null) {
+            List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
+            int playerNumber = onlinePlayers.size();
+            int maxPlayer = server.getMaxPlayerCount();
+            DisFabric.jda.getPresence().setActivity(Activity.playing(String.valueOf(playerNumber + " / " + maxPlayer)));
+        }
+        if (server != null && (DisFabric.config.allowBots || !e.getAuthor().isBot()) && channel.getIdLong() == DisFabric.config.bridgeChannel) {
             String raw = e.getMessage().getContentRaw();
             if (raw.startsWith("!")) {
                 int space = raw.indexOf(' ', 1);

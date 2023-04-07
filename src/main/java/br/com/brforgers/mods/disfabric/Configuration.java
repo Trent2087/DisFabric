@@ -55,8 +55,12 @@ public class Configuration implements ConfigData {
     @ConfigEntry.Category(value = "Discord")
     public Set<Long> admins = new HashSet<>();
 
-      @ConfigEntry.Category(value = "Discord")
+    @ConfigEntry.Category(value = "Discord")
     public Set<Long> roles = new HashSet<>();
+
+    @Comment(value = "Allow another bot to run a command as long as it has an allowed role.")
+    @ConfigEntry.Category(value = "Discord")
+    public boolean allowBots = true;
 
     @Deprecated
     boolean migrateAdmins() {
