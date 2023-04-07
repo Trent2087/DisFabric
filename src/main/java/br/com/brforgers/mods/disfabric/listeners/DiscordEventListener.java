@@ -8,7 +8,10 @@ import com.mojang.authlib.Agent;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.ProfileLookupCallback;
 import dev.gegy.mdchat.TextStyler;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -27,6 +30,7 @@ import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -42,7 +46,23 @@ public class DiscordEventListener extends ListenerAdapter {
                 int space = raw.indexOf(' ', 1);
                 switch (space == -1 ? raw.substring(1) : raw.substring(1, space)) {
                     case "console" -> {
-                        if (!DisFabric.config.admins.contains(e.getAuthor().getIdLong())) return;
+                        long authorId = e.getAuthor().getIdLong();
+                        Guild guild = e.getGuild();
+                        Member authorMember = guild.getMemberById(authorId);
+
+                        boolean hasAdminRole = false;
+                        for (long roleId : DisFabric.config.roles) {
+                            Role role = guild.getRoleById(roleId);
+                            if (role != null && authorMember.getRoles().contains(role)) {
+                                hasAdminRole = true;
+                                break;
+                            }
+                        }
+
+                        if (!hasAdminRole && !DisFabric.config.admins.contains(authorId)) {
+                            return; // Author doesn't have an admin role or admin user ID, so return and don't execute the function
+                        }
+
                         String command = raw.substring(space + 1);
                         server.execute(() -> server.getCommandManager().executeWithPrefix(getDiscordCommandSource(e), command));
                     }
@@ -119,10 +139,10 @@ public class DiscordEventListener extends ListenerAdapter {
                     case "help" -> channel.sendMessage("""
                             ```ansi
                             =============== \u001B[32;1mCommands\u001B[0m ===============
-                                                    
+
                             To whitelist yourself on this server use:
                             !\u001B[33mwhitelist\u001B[0m <\u001B[30mminecraft username\u001B[0m>
-                                                    
+
                             !\u001B[33monline\u001B[0m: list server online players
                             !\u001B[33mtps\u001B[0m: shows loaded dimensions tps's
                             !\u001B[33mspawn\u001B[0m: shows the location of spawn
