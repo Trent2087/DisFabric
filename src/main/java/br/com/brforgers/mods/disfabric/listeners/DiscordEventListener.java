@@ -37,6 +37,21 @@ import java.util.Objects;
 public class DiscordEventListener extends ListenerAdapter {
     private static final Style LINK = Style.EMPTY.withFormatting(Formatting.AQUA, Formatting.UNDERLINE);
 
+    private boolean checkAdminPermissions(Member authorMember, long authorId) {
+        Guild guild = authorMember.getGuild();
+
+        boolean hasAdminRole = false;
+        for (long roleId : DisFabric.config.roles) {
+            Role role = guild.getRoleById(roleId);
+            if (role != null && authorMember.getRoles().contains(role)) {
+                hasAdminRole = true;
+                break;
+            }
+        }
+
+        return hasAdminRole || DisFabric.config.admins.contains(authorId);
+    }
+
     public void onMessageReceived(@NotNull MessageReceivedEvent e) {
         MinecraftServer server = getServer();
         MessageChannel channel = e.getChannel();
@@ -47,28 +62,23 @@ public class DiscordEventListener extends ListenerAdapter {
                 switch (space == -1 ? raw.substring(1) : raw.substring(1, space)) {
                     case "console" -> {
                         long authorId = e.getAuthor().getIdLong();
-                        Guild guild = e.getGuild();
-                        Member authorMember = guild.getMemberById(authorId);
+                        Member authorMember = e.getMember();
 
-                        boolean hasAdminRole = false;
-                        for (long roleId : DisFabric.config.roles) {
-                            Role role = guild.getRoleById(roleId);
-                            if (role != null && authorMember.getRoles().contains(role)) {
-                                hasAdminRole = true;
-                                break;
-                            }
-                        }
-
-                        if (!hasAdminRole && !DisFabric.config.admins.contains(authorId)) {
+                        if (!checkAdminPermissions(authorMember, authorId)) {
                             return; // Author doesn't have an admin role or admin user ID, so return and don't execute the function
                         }
 
                         String command = raw.substring(space + 1);
                         server.execute(() -> server.getCommandManager().executeWithPrefix(getDiscordCommandSource(e), command));
                     }
+
                     case "whitelist" -> {
-                        if (!DisFabric.config.publicWhitelist &&
-                                !DisFabric.config.admins.contains(e.getAuthor().getIdLong())) return;
+                        long authorId = e.getAuthor().getIdLong();
+                        Member authorMember = e.getMember();
+
+                        if (!DisFabric.config.publicWhitelist && !checkAdminPermissions(authorMember, authorId)) {
+                            return; // Author doesn't have an admin role or admin user ID, so return and don't execute the function
+                        }
 
                         String username = raw.substring(space + 1).strip();
 
