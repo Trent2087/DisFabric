@@ -1,0 +1,130 @@
+package br.com.brforgers.mods.disfabric.markdown;// Created 2022-04-03T04:25:43
+
+import org.commonmark.Extension;
+import org.commonmark.node.Nodes;
+import org.commonmark.node.Text;
+import org.commonmark.parser.Parser;
+import org.commonmark.parser.delimiter.DelimiterProcessor;
+import org.commonmark.parser.delimiter.DelimiterRun;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static br.com.brforgers.mods.disfabric.markdown.MarkdownUtil.insertBetween;
+
+/**
+ * @author Ampflower
+ * @since 1.3.5
+ **/
+public class DiscordChatExtension implements Parser.ParserExtension {
+    public static final Extension INSTANCE = new DiscordChatExtension();
+    private static final Pattern
+            USER = Pattern.compile("@!?(\\d{1,19})"),
+            ROLE = Pattern.compile("@&(\\d{1,19})"),
+            CHANNEL = Pattern.compile("#(\\d{1,19})"),
+            EMOJI = Pattern.compile("(a?):([a-zA-Z0-9_-]++):(\\d{1,19})"),
+            TIME = Pattern.compile("t:(-?\\d{1,19})(?::([dftDFTR]))?");
+
+    private DiscordChatExtension() {
+    }
+
+    @Override
+    public void extend(Parser.Builder parserBuilder) {
+        parserBuilder.customDelimiterProcessor(new MentionDelimiterProcessor());
+        parserBuilder.customDelimiterProcessor(new SpecialStringDelimiterProcessor());
+    }
+
+    private static class MentionDelimiterProcessor implements DelimiterProcessor {
+        @Override
+        public char getOpeningCharacter() {
+            return '<';
+        }
+
+        @Override
+        public char getClosingCharacter() {
+            return '>';
+        }
+
+        @Override
+        public int getMinLength() {
+            return 1;
+        }
+
+        @Override
+        public int process(DelimiterRun openingRun, DelimiterRun closingRun) {
+            if (openingRun.length() >= 1 && closingRun.length() >= 1) {
+                Text opener = openingRun.getOpener();
+                Text closer = closingRun.getCloser();
+                StringBuilder why = new StringBuilder();
+                for (var node : Nodes.between(opener, closer)) {
+                    if (!(node instanceof Text text)) return 0;
+                    why.append(text.getLiteral());
+                }
+                if (why.isEmpty()) return 0;
+                Matcher matcher = USER.matcher(why);
+                try {
+                    if (matcher.matches()) {
+                        insertBetween(opener, closer, new MentionNode(MentionType.USER, Long.parseUnsignedLong(matcher.group(1))));
+                        return 1;
+                    }
+                    if (matcher.usePattern(ROLE).matches()) {
+                        insertBetween(opener, closer, new MentionNode(MentionType.ROLE, Long.parseUnsignedLong(matcher.group(1))));
+                        return 1;
+                    }
+                    if (matcher.usePattern(CHANNEL).matches()) {
+                        insertBetween(opener, closer, new MentionNode(MentionType.CHANNEL, Long.parseUnsignedLong(matcher.group(1))));
+                        return 1;
+                    }
+                    if (matcher.usePattern(EMOJI).matches()) {
+                        insertBetween(opener, closer, new EmoteNode("a".equals(matcher.group(1)), matcher.group(2), Long.parseUnsignedLong(matcher.group(3))));
+                        return 1;
+                    }
+                    if (matcher.usePattern(TIME).matches()) {
+                        insertBetween(opener, closer, new TimeNode(Long.parseLong(matcher.group(1)), TimeStyle.of(matcher.group(2))));
+                        return 1;
+                    }
+                } catch (NumberFormatException ignore) {
+                }
+            }
+            return 0;
+        }
+    }
+
+    private static class SpecialStringDelimiterProcessor implements DelimiterProcessor {
+        @Override
+        public char getOpeningCharacter() {
+            return '\b';
+        }
+
+        @Override
+        public char getClosingCharacter() {
+            return '\b';
+        }
+
+        @Override
+        public int getMinLength() {
+            return 1;
+        }
+
+        @Override
+        public int process(DelimiterRun openingRun, DelimiterRun closingRun) {
+            if (openingRun.length() >= 1 && closingRun.length() >= 1) {
+                Text opener = openingRun.getOpener();
+                Text closer = closingRun.getCloser();
+                StringBuilder why = new StringBuilder();
+                for (var node : Nodes.between(opener, closer)) {
+                    if (!(node instanceof Text text)) return 0;
+                    why.append(text.getLiteral());
+                }
+
+                final var value = SpecialStringType.nameToTypeStore.get(why.toString());
+
+                if (value != null) {
+                    insertBetween(opener, closer, value.node());
+                    return 1;
+                }
+            }
+            return 0;
+        }
+    }
+}

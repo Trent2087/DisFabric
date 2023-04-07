@@ -12,5 +12,19 @@
 + Announces when a player die
 + Announces when a players get an advancement
 + Sends commands to server by Discord
-+ Markdown support in game
 + ¯\\\_(ツ)\_/¯
++ Nickname and skin customisation mod support.
+
+### Required Mods
+
+- [Fabric Loader](https://fabricmc.net) or [Quilt Loader](https://quiltmc.org)
+- [Fabric API](https://modrinth.com/mod/fabric-api) or [Quilt Standard Libraries](https://modrinth.com/mod/qsl)
+- [Fabric Language Kotlin](https://modrinth.com/mod/fabric-language-kotlin)
+  or [Quilt Kotlin Libraries](https://modrinth.com/mod/qkl)
+- [Markdown Chat](https://github.com/Gegy/markdown-chat/releases)
+
+### Mod support
+
+- [Fabric Tailor](https://modrinth.com/mod/fabrictailor)
+- [Drogtor the Nickinator](https://modrinth.com/mod/drogtor)
+  or [Styled Nicknames](https://modrinth.com/mod/styled-nicknames)

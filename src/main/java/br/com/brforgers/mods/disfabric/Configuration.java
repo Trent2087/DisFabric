@@ -5,11 +5,18 @@ import me.sargunvohra.mcmods.autoconfig1u.annotation.Config;
 import me.sargunvohra.mcmods.autoconfig1u.annotation.ConfigEntry;
 import me.sargunvohra.mcmods.autoconfig1u.shadowed.blue.endless.jankson.Comment;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Config(name = DisFabric.MOD_ID)
 public class Configuration implements ConfigData {
-    @Comment(value = "Do you only what to use disfabric for commands?")
-    @ConfigEntry.Category(value = "CommandsOnly")
+    @Comment(value = "Do you only what to use DisFabric for commands?")
+    @ConfigEntry.Category(value = "Commands")
     public boolean commandsOnly = false;
+
+    @Comment(value = "Allow users to `!whitelist` themselves?")
+    @ConfigEntry.Category(value = "Commands")
+    public boolean publicWhitelist = false;
 
     @Comment(value = "Sets if DisFabric Should Modify In-Game Chat Messages")
     @ConfigEntry.Category(value = "MinecraftChat")
@@ -31,28 +38,83 @@ public class Configuration implements ConfigData {
     @ConfigEntry.Category(value = "Discord")
     public String webhookURL = "";
 
-    @Comment(value = "Use UUID instead nickname to request player head on webhook")
+    @Deprecated(forRemoval = true)
+    @Comment(value = "[Deprecated] - Use `admins` instead.")
     @ConfigEntry.Category(value = "Discord")
-    public Boolean useUUIDInsteadNickname = true;
+    public Set<String> adminsIds = new HashSet<>();
 
     @Comment(value = """
-            Admins ids in Discord; see https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-
-            If more than one, enclose each id in quotation marks separated by commas, like this:
+            Admins IDs in Discord, either role or user; see https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-
+                        
+            If you're adding more than one admin, separate using commas, like this:
             "adminsIds": [\s
-            \t\t"000",
-            \t\t"111",
-            \t\t"222"
+            \t\t000,
+            \t\t111,
+            \t\t222
             \t]""")
     @ConfigEntry.Category(value = "Discord")
-    public String[] adminsIds = {""};
+    public Set<Long> admins = new HashSet<>();
 
-    @Comment(value = "Channel id in Discord")
-    @ConfigEntry.Category(value = "Discord")
-    public String channelId = "";
+    @Deprecated
+    boolean migrateAdmins() {
+        if (adminsIds != null && !adminsIds.isEmpty()) {
+            for (var str : adminsIds) {
+                admins.add(Long.parseUnsignedLong(str));
+            }
+            adminsIds = null;
+            return true;
+        }
+        return false;
+    }
 
-    @Comment(value = "If you enabled \"Server Members Intent\" in the bot's config page, change it to true. (This is only necessary if you want to enable discord mentions inside the game)")
+    @Comment(value = "The permission level that admins have when issuing commands.")
     @ConfigEntry.Category(value = "Discord")
-    public boolean membersIntents = false;
+    public int adminPermissionLevel = 4;
+
+    @Deprecated(forRemoval = true)
+    @Comment(value = "[Deprecated] Use `bridgeChannel` instead.")
+    @ConfigEntry.Category(value = "Discord")
+    public String channelId;
+
+    @Comment(value = "The bridge channel in Discord.")
+    @ConfigEntry.Category(value = "Discord")
+    public long bridgeChannel = 0L;
+
+    @Deprecated
+    boolean migrateBridgeChannel() {
+        if (channelId != null && !channelId.isBlank()) {
+            try {
+                bridgeChannel = Long.parseUnsignedLong(channelId);
+            } catch (NumberFormatException e) {
+                if (bridgeChannel == 0L) {
+                    throw new RuntimeException("Malformed config: channelId cannot be parsed as a Discord snowflake.");
+                }
+            }
+            channelId = null;
+            return true;
+        }
+        return false;
+    }
+
+    @Comment("Bug reports channel in Discord. Will be disabled when set to 0.")
+    @ConfigEntry.Category("Discord")
+    public long bugReportChannel = 0L;
+
+    @Comment("Create thread on bug report? Will be automatically disabled if disallowed.")
+    @ConfigEntry.Category("Discord")
+    public boolean bugReportAutoThread = true;
+
+    @Comment("Player reports channel in Discord. Will be disabled when set to 0.")
+    @ConfigEntry.Category("Discord")
+    public long userReportChannel = 0L;
+
+    @Comment("Role to ping on player report. Staff role recommended. Will not ping when set to 0.")
+    @ConfigEntry.Category("Discord")
+    public long userReportStaffRole = 0L;
+
+    @Comment("Suggestions channel in Discord. Will be disabled when set to 0.")
+    @ConfigEntry.Category("Discord")
+    public long suggestionChannel = 0L;
 
     @Comment(value = "Should announce when a players join/leave the server?")
     @ConfigEntry.Category(value = "Discord")
@@ -140,32 +202,5 @@ public class Configuration implements ConfigData {
                 %advancement% | Advancement name""")
         @ConfigEntry.Category(value = "Texts")
         public String advancementGoal = "%playername% has reached the goal **[%advancement%]**";
-
-        @Comment(value = """
-                Discord -> Minecraft
-                Colored part of the message, this part of the message will receive the same color as the role in the discord, comes before the colorless part
-                Available placeholders:
-                %discordname% | User nickname in the guild
-                %message% | The message""")
-        @ConfigEntry.Category(value = "Texts")
-        public String coloredText = "[Discord] ";
-
-        @Comment(value = """
-                Discord -> Minecraft
-                Colorless (white) part of the message, I think you already know what it is by the other comment
-                Available placeholders:
-                %discordname% | Nickname of the user in the guild
-                %message% | The message""")
-        @ConfigEntry.Category(value = "Texts")
-        public String colorlessText = "<%discordname%> %message%";
-
-        @Comment(value = "Replaces the § symbol with & in any discord message to avoid formatted messages")
-        @ConfigEntry.Category(value = "Texts")
-        public Boolean removeVanillaFormattingFromDiscord = false;
-
-        @Comment(value = "Removes line break from any discord message to avoid spam")
-        @ConfigEntry.Category(value = "Texts")
-        public Boolean removeLineBreakFromDiscord = false;
-
     }
 }
