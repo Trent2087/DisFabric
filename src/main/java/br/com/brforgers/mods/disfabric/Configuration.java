@@ -60,7 +60,7 @@ public class Configuration implements ConfigData {
 
     @Comment(value = "Allow another bot to run a command as long as it has an allowed role.")
     @ConfigEntry.Category(value = "Discord")
-    public boolean allowBots = true;
+    public boolean allowBots = false;
 
     @Deprecated
     boolean migrateAdmins() {
