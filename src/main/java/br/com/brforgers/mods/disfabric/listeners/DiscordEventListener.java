@@ -3,6 +3,7 @@ package br.com.brforgers.mods.disfabric.listeners;
 import br.com.brforgers.mods.disfabric.DisFabric;
 import br.com.brforgers.mods.disfabric.utils.DiscordCommandOutput;
 import br.com.brforgers.mods.disfabric.utils.MarkdownParser;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
@@ -21,21 +22,50 @@ import org.jetbrains.annotations.NotNull;
 
 import com.mojang.brigadier.ParseResults;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 public class DiscordEventListener extends ListenerAdapter {
 
+    private boolean isAuthorInAdminRoleIdsList(User author) {
+        Guild guild = author.getJDA().getGuildById(DisFabric.config.guildId);
+        if (guild == null) {
+            return false; // cannot find the guild with the specified ID
+        }
+        Member member = guild.retrieveMemberById(author.getId()).complete();
+        if (member == null) {
+            return false; // cannot find the member for the author in the guild
+        }
+        for (Long roleId : DisFabric.config.adminRoleIds) {
+            Role role = guild.getRoleById(roleId);
+            if (role != null && member.getRoles().contains(role)) {
+                return true; // the author has the specified role
+            }
+        }
+        return false; // the author does not have any of the admin roles
+    }
+
     public void onMessageReceived(@NotNull MessageReceivedEvent e) {
         MinecraftServer server = getServer();
-        if(e.getAuthor() != e.getJDA().getSelfUser() && !e.getAuthor().isBot() && e.getChannel().getId().equals(DisFabric.config.channelId) && server != null) {
-            if(e.getMessage().getContentRaw().startsWith("!console") && Arrays.asList(DisFabric.config.adminsIds).contains(e.getAuthor().getId())) {
-                String command = e.getMessage().getContentRaw().replace("!console ", "");
 
+        if(server !=null) {
+            List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
+            int playerNumber = onlinePlayers.size();
+            int maxPlayer = server.getMaxPlayerCount();
+            DisFabric.jda.getPresence().setActivity(Activity.playing(playerNumber + " / " + maxPlayer));
+        }
+
+        if((e.getAuthor() != e.getJDA().getSelfUser()) && (DisFabric.config.allowBots || !e.getAuthor().isBot()) && e.getChannel().getId().equals(DisFabric.config.channelId) && (server != null)) {
+            if(e.getMessage().getContentRaw().startsWith("!console") && (isAuthorInAdminRoleIdsList(e.getAuthor()))) {
+                String command = e.getMessage().getContentRaw().replace("!console ", "");
                 ServerCommandSource source = getDiscordCommandSource();
                 ParseResults<ServerCommandSource> results = server.getCommandManager().getDispatcher().parse(command, source);
+                server.getCommandManager().execute(results, command);
 
+            } else if(e.getMessage().getContentRaw().startsWith("!whitelist")) {
+                String command = e.getMessage().getContentRaw().replace("!whitelist ", "whitelist add ");
+                ServerCommandSource source = getDiscordCommandSource();
+                ParseResults<ServerCommandSource> results = server.getCommandManager().getDispatcher().parse(command, source);
                 server.getCommandManager().execute(results, command);
 
             } else if(e.getMessage().getContentRaw().startsWith("!online")) {
@@ -48,17 +78,9 @@ public class DiscordEventListener extends ListenerAdapter {
                 e.getChannel().sendMessage(playerList.toString()).queue();
 
             } else if (e.getMessage().getContentRaw().startsWith("!tps")) {
-//                StringBuilder tpss = new StringBuilder("```\n============== TPS per loaded dimension ==============\n");
-//                for (Integer id : server.DimensionManager.getIDs()) {
-//                    double worldTickTime = Utils.mean(server.tick.worldTickTimes.get(id)) * 1.0E-6D;
-//                    double worldTPS = Math.min(1000.0 / worldTickTime, 20);
-//                    tpss.append("\n").append(DimensionManager.getProviderType(id).getName()).append(" (").append(id).append("): ").append(worldTPS).append("\n");
-//                }
-//                tpss.append("Server TPS: ");
                 StringBuilder tpss = new StringBuilder("Server TPS: ");
                 double serverTickTime = MathHelper.average(server.lastTickLengths) * 1.0E-6D;
                 tpss.append(Math.min(1000.0 / serverTickTime, 20));
-//                tpss.append("```");
                 e.getChannel().sendMessage(tpss.toString()).queue();
 
             } else if(e.getMessage().getContentRaw().startsWith("!help")){
