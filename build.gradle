@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '0.4-SNAPSHOT'
+    id 'fabric-loom' version '0.5-SNAPSHOT'
     id 'maven-publish'
     id 'project-report'
 }
@@ -15,7 +15,7 @@ repositories {
     jcenter()
     maven {
         name = "Fabric"
-        url = "http://maven.fabricmc.net/"
+        url = "https://maven.fabricmc.net/"
     }
 }
 
