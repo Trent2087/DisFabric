@@ -5,11 +5,18 @@ import me.sargunvohra.mcmods.autoconfig1u.annotation.Config;
 import me.sargunvohra.mcmods.autoconfig1u.annotation.ConfigEntry;
 import me.sargunvohra.mcmods.autoconfig1u.shadowed.blue.endless.jankson.Comment;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Config(name = DisFabric.MOD_ID)
 public class Configuration implements ConfigData {
     @Comment(value = "Sets if DisFabric Should Modify In-Game Chat Messages")
     @ConfigEntry.Category(value = "MinecraftChat")
     public boolean modifyChatMessages = true;
+
+    @Comment(value = "Guild ID")
+    @ConfigEntry.Category(value = "Discord")
+    public String guildId = "";
 
     @Comment(value = "Bot Token; see https://discordpy.readthedocs.io/en/latest/discord.html")
     @ConfigEntry.Category(value = "Discord")
@@ -27,13 +34,13 @@ public class Configuration implements ConfigData {
     @ConfigEntry.Category(value = "Discord")
     public String webhookURL = "";
 
-    @Comment(value = "Admins ids in Discord; see https://support.discord.com/hc/en-us/articles/206346498-Where-can-I-find-my-User-Server-Message-ID-\nIf more than one, enclose each id in quotation marks separated by commas, like this:\n\"adminsIds\": [ \n" +
-            "\t\t\"000\",\n" +
-            "\t\t\"111\",\n" +
-            "\t\t\"222\"\n" +
-            "\t]")
+    @Comment(value = "A list of role IDs that have admin privileges. Add role IDs like this: adminRoleIds=[123456789012345678, 987654321098765432]")
     @ConfigEntry.Category(value = "Discord")
-    public String[] adminsIds = {""};
+    public List<Long> adminRoleIds = new ArrayList<>();
+
+    @Comment(value = "Allow other bots to run !console commands")
+    @ConfigEntry.Category(value = "Discord")
+    public boolean allowBots = false;
 
     @Comment(value = "Channel id in Discord")
     @ConfigEntry.Category(value = "Discord")
