@@ -83,8 +83,9 @@ tasks.withType(JavaCompile) {
     it.options.encoding = "UTF-8"
 
     // Minecraft 1.17 (21w19a) upwards uses Java 16.
-    it.options.release = 16
+    it.options.release = 8
 }
+
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = "sources"
