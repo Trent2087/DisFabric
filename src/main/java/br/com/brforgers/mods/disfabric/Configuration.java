@@ -77,12 +77,12 @@ public class Configuration implements ConfigData {
         @Comment(value = "Minecraft -> Discord\n"+
                 "Server started message")
         @ConfigEntry.Category(value = "Texts")
-        public String serverStarted = "**Server started!**";
+        public String serverStarted = ":green_circle: **Server started!**";
 
         @Comment(value = "Minecraft -> Discord\n"+
                 "Server stopped message")
         @ConfigEntry.Category(value = "Texts")
-        public String serverStopped = "**Server stopped!**";
+        public String serverStopped = ":octagonal_sign: **Server stopped!**";
 
         @Comment(value = "Minecraft -> Discord\n"+
                 "Join server\n"+
@@ -104,7 +104,7 @@ public class Configuration implements ConfigData {
                 "%playername% | Player name\n"+
                 "%deathmessage% | Death message")
         @ConfigEntry.Category(value = "Texts")
-        public String deathMessage = "**%deathmessage%**";
+        public String deathMessage = ":skull: **%deathmessage%**";
 
         @Comment(value = "Minecraft -> Discord\n"+
                 "Advancement type task message\n"+
