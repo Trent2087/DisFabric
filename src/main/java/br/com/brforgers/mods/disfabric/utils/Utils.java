@@ -29,9 +29,9 @@ public class Utils {
         int x = 0;
         while(matcher.find()) {
             Member member = null;
-            for (Member m : DisFabric.textChannel.getMembers()) {
+            for (Member m : DisFabric.textChannel.getGuild().getMemberCache()) {
                 String name = matcher.group().substring(1);
-                if (m.getUser().getName().toLowerCase().equals(name.toLowerCase()) || (m.getNickname() != null && m.getNickname().toLowerCase().equals(name.toLowerCase()))) {
+                if (m.getUser().getName().equalsIgnoreCase(name) || (m.getNickname() != null && m.getNickname().equalsIgnoreCase(name))) {
                     member = m;
                 }
             }
@@ -49,5 +49,15 @@ public class Utils {
             mcString.append(messageList.get(x));
         }
         return new Pair<>(discordString.toString(), mcString.toString());
+    }
+
+    public static double average(long[] values) {
+        long l = 0L;
+
+        for (long m : values) {
+            l += m;
+        }
+
+        return (double)l / (double)values.length;
     }
 }

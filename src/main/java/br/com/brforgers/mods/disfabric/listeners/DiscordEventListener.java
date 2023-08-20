@@ -3,7 +3,7 @@ package br.com.brforgers.mods.disfabric.listeners;
 import br.com.brforgers.mods.disfabric.DisFabric;
 import br.com.brforgers.mods.disfabric.utils.DiscordCommandOutput;
 import br.com.brforgers.mods.disfabric.utils.MarkdownParser;
-import net.dv8tion.jda.api.entities.*;
+import br.com.brforgers.mods.disfabric.utils.Utils;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.loader.api.FabricLoader;
@@ -15,13 +15,11 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.math.MathHelper;
+import net.dv8tion.jda.api.entities.*;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
-
 import com.mojang.brigadier.ParseResults;
-
 import java.util.List;
 import java.util.Objects;
 
@@ -79,7 +77,7 @@ public class DiscordEventListener extends ListenerAdapter {
 
             } else if (e.getMessage().getContentRaw().startsWith("!tps")) {
                 StringBuilder tpss = new StringBuilder("Server TPS: ");
-                double serverTickTime = MathHelper.average(server.lastTickLengths) * 1.0E-6D;
+                double serverTickTime = Utils.average(server.lastTickLengths) * 1.0E-6D;
                 tpss.append(Math.min(1000.0 / serverTickTime, 20));
                 e.getChannel().sendMessage(tpss.toString()).queue();
 
